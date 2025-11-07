@@ -1,0 +1,19 @@
+# Basic site config
+title: "Zeus Rising"
+description: "Built with jekyll-theme-yat via GitHub Actions"
+url: "https://ZeusRising.wooleys.us"
+baseurl: ""   # for project sites use "/<repo-name>"
+
+# Use Yat via the GitHub repo (remote theme)
+remote_theme: "jeffreytse/jekyll-theme-yat"
+
+# Activate the plugin that makes remote_theme work
+plugins:
+  - jekyll-remote-theme
+  - jekyll-feed
+  - jekyll-seo-tag
+
+# (Optional) Yat-specific tweaks—add as you like
+ yat:
+   theme_color: "auto"
+#   # ...see the Yat README for available options
