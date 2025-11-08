@@ -12,6 +12,33 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up Node.js (for Dart Sass)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Dart Sass
+        run: npm install -g sass
+
+      - name: Download remote YAT theme and expose path
+        run: |
+          THEME=jeffreytse/jekyll-theme-yat
+          TMP=/tmp/jekyll-remote-theme
+          rm -rf "$TMP"
+          mkdir -p "$TMP"
+          curl -L -o "$TMP/theme.zip" "https://codeload.github.com/${THEME}/zip/HEAD"
+          unzip -q "$TMP/theme.zip" -d "$TMP"
+          # find the extracted directory (pattern: jeffreytse-jekyll-theme-yat-*)
+          THEMEDIR=$(find "$TMP" -maxdepth 1 -type d -name "*jeffreytse-jekyll-theme-yat*" | head -n1)
+          echo "THEMEDIR=$THEMEDIR" >> $GITHUB_ENV
+
+      - name: Compile theme SCSS with Dart Sass into site assets
+        run: |
+          echo "Theme dir: $THEMEDIR"
+          mkdir -p assets/css
+          # compile the theme's main.scss to assets/css/main.css in repo so it overrides theme compilation
+          sass "$THEMEDIR/assets/css/main.scss" assets/css/main.css --no-source-map --style=compressed
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
