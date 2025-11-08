@@ -1,6 +1,6 @@
 # Basic site config
 title: "Zeus Rising"
-description: "Built with jekyll-theme-yat via GitHub Actions"
+description: "A Novel in progress"
 url: "https://ZeusRising.wooleys.us"
 baseurl: ""   # for project sites use "/<repo-name>"
 
