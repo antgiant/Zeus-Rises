@@ -1,8 +1,10 @@
 source "https://rubygems.org"
 
-gem "jekyll", "~> 4.3"
+# Use the GitHub Pages gem so local `bundle exec jekyll build` mirrors the Pages environment.
+# This avoids Jekyll/gem version mismatches when GitHub Actions or Pages builds the site.
+gem "github-pages", group: :jekyll_plugins
 
-# Needed to use a theme hosted on GitHub (remote_theme)
+# Explicitly include the remote-theme helper (kept for clarity/local builds).
 gem "jekyll-remote-theme"
 
 group :jekyll_plugins do

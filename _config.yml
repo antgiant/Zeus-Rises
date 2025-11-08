@@ -14,6 +14,6 @@ plugins:
   - jekyll-seo-tag
 
 # (Optional) Yat-specific tweaks—add as you like
- yat:
-   theme_color: "auto"
+yat:
+  theme_color: "auto"
 #   # ...see the Yat README for available options
