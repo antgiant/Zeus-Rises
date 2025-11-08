@@ -6,3 +6,14 @@
 #sidebar {
   display: none !important;
 }
+
+body {
+  font-family: 'Architects Daughter', 'Helvetica Neue', Helvetica, Arial, serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #121212;
+    color: #e0e0e0;
+  }
+}
