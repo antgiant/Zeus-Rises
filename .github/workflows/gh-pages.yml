@@ -36,21 +36,41 @@ jobs:
           echo "Extracting theme..."
           unzip -q "$TMP/theme.zip" -d "$TMP"
           
-          # Find and verify theme directory
-          THEMEDIR=$(find "$TMP" -maxdepth 1 -type d -name "*jeffreytse-jekyll-theme-yat*" | head -n1)
+          echo "Listing extracted contents:"
+          ls -la "$TMP"
+          
+          # First try direct naming pattern
+          THEMEDIR=$(find "$TMP" -maxdepth 1 -type d -name "jekyll-theme-yat-*" | head -n1)
+          
+          # If not found, try alternative pattern
+          if [ -z "$THEMEDIR" ]; then
+            THEMEDIR=$(find "$TMP" -maxdepth 1 -type d -name "*jekyll-theme-yat*" | head -n1)
+          fi
+          
+          # Final verification
           if [ -z "$THEMEDIR" ]; then
             echo "Error: Could not find extracted theme directory"
+            echo "Contents of $TMP:"
+            ls -R "$TMP"
             exit 1
           fi
           
           echo "Found theme directory: $THEMEDIR"
-          if [ ! -f "$THEMEDIR/assets/css/main.scss" ]; then
-            echo "Error: Theme SCSS file not found at $THEMEDIR/assets/css/main.scss"
-            ls -la "$THEMEDIR/assets/css/" || true
+          echo "Theme directory contents:"
+          ls -R "$THEMEDIR"
+          
+          # Check for SCSS file
+          SCSS_FILE="$THEMEDIR/assets/css/main.scss"
+          if [ ! -f "$SCSS_FILE" ]; then
+            echo "Error: Theme SCSS file not found at $SCSS_FILE"
+            echo "Looking for any .scss files:"
+            find "$THEMEDIR" -name "*.scss"
             exit 1
           fi
           
+          echo "Found SCSS file: $SCSS_FILE"
           echo "THEMEDIR=$THEMEDIR" >> $GITHUB_ENV
+          echo "SCSS_FILE=$SCSS_FILE" >> $GITHUB_ENV
 
       - name: Compile theme SCSS with Dart Sass into site assets
         run: |
