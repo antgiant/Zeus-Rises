@@ -20,24 +20,53 @@ jobs:
       - name: Install Dart Sass
         run: npm install -g sass
 
-      - name: Download remote YAT theme and expose path
+      - name: Download and extract YAT theme
         run: |
           THEME=jeffreytse/jekyll-theme-yat
-          TMP=/tmp/jekyll-remote-theme
+          WORKDIR="${GITHUB_WORKSPACE}"
+          TMP="${WORKDIR}/tmp/theme"
+          
+          echo "Cleaning and creating temp directory..."
           rm -rf "$TMP"
           mkdir -p "$TMP"
+          
+          echo "Downloading theme..."
           curl -L -o "$TMP/theme.zip" "https://codeload.github.com/${THEME}/zip/HEAD"
+          
+          echo "Extracting theme..."
           unzip -q "$TMP/theme.zip" -d "$TMP"
-          # find the extracted directory (pattern: jeffreytse-jekyll-theme-yat-*)
+          
+          # Find and verify theme directory
           THEMEDIR=$(find "$TMP" -maxdepth 1 -type d -name "*jeffreytse-jekyll-theme-yat*" | head -n1)
+          if [ -z "$THEMEDIR" ]; then
+            echo "Error: Could not find extracted theme directory"
+            exit 1
+          fi
+          
+          echo "Found theme directory: $THEMEDIR"
+          if [ ! -f "$THEMEDIR/assets/css/main.scss" ]; then
+            echo "Error: Theme SCSS file not found at $THEMEDIR/assets/css/main.scss"
+            ls -la "$THEMEDIR/assets/css/" || true
+            exit 1
+          fi
+          
           echo "THEMEDIR=$THEMEDIR" >> $GITHUB_ENV
 
       - name: Compile theme SCSS with Dart Sass into site assets
         run: |
+          WORKDIR="${GITHUB_WORKSPACE}"
           echo "Theme dir: $THEMEDIR"
-          mkdir -p assets/css
-          # compile the theme's main.scss to assets/css/main.css in repo so it overrides theme compilation
-          sass "$THEMEDIR/assets/css/main.scss" assets/css/main.css --no-source-map --style=compressed
+          echo "Working dir: $WORKDIR"
+          
+          # Create assets directory in the site
+          mkdir -p "${WORKDIR}/assets/css"
+          
+          # List theme's SCSS file to verify it exists
+          ls -la "$THEMEDIR/assets/css/main.scss"
+          
+          # Compile SCSS with absolute paths and verbose output
+          echo "Compiling SCSS..."
+          sass --load-path="$THEMEDIR/assets/css" "$THEMEDIR/assets/css/main.scss" "${WORKDIR}/assets/css/main.css" --no-source-map --style=compressed --trace
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
