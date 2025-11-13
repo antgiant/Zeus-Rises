@@ -13,8 +13,8 @@ body {
 
 @media (prefers-color-scheme: dark) {
   body {
-    background: #121212;
-    background: url('../img/stars.png');
+    background-color: #121212;
+    background-image: url('../img/stars.png');
     background-repeat: no-repeat;
     background-position: center;
     background-size: cover;
