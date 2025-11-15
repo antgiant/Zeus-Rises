@@ -16,8 +16,9 @@ body {
     background-color: #121212;
     background-image: url('../img/stars.png');
     background-repeat: no-repeat;
-    background-position: center;
+    min-height: 100vh;
+    background-position: center center;
     background-size: cover;
-    color: blue;
+    color: lightblue;
   }
 }
