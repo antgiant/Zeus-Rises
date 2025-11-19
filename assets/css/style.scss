@@ -9,11 +9,16 @@
 
 body {
   font-family: 'Architects Daughter', 'Helvetica Neue', Helvetica, Arial, serif;
-    isolation: isolate;
+  isolation: isolate;
 }
 body * {
   color: white;
   mix-blend-mode: difference;
+}
+
+.button {
+  //Hide github ad
+  display: none;
 }
 
 @media (prefers-color-scheme: dark) {
