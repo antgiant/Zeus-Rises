@@ -3,10 +3,6 @@
 
 @import "{{ site.theme }}";
 
-#sidebar {
-  display: none !important;
-}
-
 body {
   font-family: 'Architects Daughter', 'Helvetica Neue', Helvetica, Arial, serif;
   isolation: isolate;
@@ -14,11 +10,6 @@ body {
 body * {
   color: white;
   mix-blend-mode: difference;
-}
-
-.button {
-  //Hide github ad
-  display: none;
 }
 
 @media (prefers-color-scheme: dark) {
