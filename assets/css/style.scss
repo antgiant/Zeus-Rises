@@ -10,21 +10,18 @@ body {
 body * {
   color: white;
   mix-blend-mode: difference;
+
+  background-repeat: no-repeat;
+  min-height: 100vh;
+  background-position: center center;
+  background-size: cover;
+  background-attachment: fixed;
+  isolation: isolate;
 }
 
 @media (prefers-color-scheme: dark) {
   body {
-    background-color: #121212;
     background-image: url('../img/stars.png');
-    background-repeat: no-repeat;
-    min-height: 100vh;
-    background-position: center center;
-    background-size: cover;
-    background-attachment: fixed;
-    isolation: isolate;
-  }
-  body * {
-    color: white;
-    mix-blend-mode: difference;
+    background-color: #121212;
   }
 }
