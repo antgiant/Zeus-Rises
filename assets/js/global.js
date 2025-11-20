@@ -1,4 +1,4 @@
-import { refreshSky } from '/assets/js//horizon/horizon.js'
+import { refreshSky } from './horizon/horizon.js'
 
 function initalize() {
   
