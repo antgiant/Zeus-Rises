@@ -277,11 +277,11 @@ export default function renderGradient(altitude, angle) {
         }%`,
     )
     .join(", ");
+  let transparency = (angle > -1 ? 1 : (angle < -18 ? 99 : ((angle/-17)*100)));
   return [
     `linear-gradient(to bottom, ${colorStops}), transparent ${transparency}%`,
     stops[0].rgb,
-    stops[stops.length - 1].rgb,
-    (angle > -1 ? 1 : (angle < -18 ? 99 : ((angle/-17)*100)))
+    stops[stops.length - 1].rgb
   ];
 }
 /*
