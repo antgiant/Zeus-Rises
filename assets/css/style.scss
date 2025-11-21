@@ -6,16 +6,18 @@
 body {
   font-family: 'Architects Daughter', 'Helvetica Neue', Helvetica, Arial, serif;
   isolation: isolate;
-}
-body * {
-  color: white;
-  mix-blend-mode: difference;
 
+
+  background-image: url('../img/stars.png');
   background-repeat: no-repeat;
   background-position: center center;
   background-size: cover;
   background-attachment: fixed;
   isolation: isolate;
+}
+body * {
+  color: white;
+  mix-blend-mode: difference;
 }
 
 @media (prefers-color-scheme: dark) {
