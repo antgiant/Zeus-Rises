@@ -183,7 +183,7 @@ function skyAlpha(r, g, b) {
     // Reduce stars up to 70% more in strong blue skies
     let alpha = alphaBrightness * (1 - 0.7 * bluenessNorm);
 
-    return Math.min(Math.max(alpha, 0), 1);
+    return 1 - Math.min(Math.max(alpha, 0), 1);
 }
 
 
