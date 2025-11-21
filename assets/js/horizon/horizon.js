@@ -16,6 +16,6 @@ export function refreshSky() {
 
   document.body.style.background = `${gradient}, url('/assets/img/stars.png'), rgb(${topVec[0]}, ${topVec[1]}, ${topVec[2]})`;
   document.body.style.backgroundRepeat = `no-repeat, repeat, no-repeat`;
-  document.body.style.backgroundSize = `cover, auto, auto`;
-  document.body.style.backgroundAttachment = `fixed, scroll, scroll`;
+  document.body.style.backgroundSize = `cover, 2048px 2048px, auto`;
+  document.body.style.backgroundAttachment = `fixed, fixed, scroll`;
 }
