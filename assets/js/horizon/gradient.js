@@ -147,7 +147,7 @@ function computeTransmittance(height, angle) {
 }
 
 // Render sky at given solar elevation
-export default function renderGradient(altitude, angle) {
+export default function renderGradient(altitude) {
   const cameraPosition = [0, GROUND_RADIUS, 0];
   const sunDirection = norm([Math.cos(altitude), Math.sin(altitude), 0]);
   
@@ -277,7 +277,7 @@ export default function renderGradient(altitude, angle) {
         }%`,
     )
     .join(", ");
-  let transparency = (angle > -1 ? 1 : (angle < -18 ? 99 : ((angle/-17)*100)));
+  let transparency = (altitude > -1 ? 1 : (altitude < -18 ? 99 : ((altitude/-17)*100)));
   return [
     `linear-gradient(to bottom, ${colorStops}), transparent ${transparency}%`,
     stops[0].rgb,

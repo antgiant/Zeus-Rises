@@ -81,8 +81,7 @@ export function getPosition(date, lat, lng) {
 
     return {
         azimuth: azimuth(H, phi, c.dec),
-        altitude: altitude(H, phi, c.dec),
-        h: hourAngle(H, phi, c.dec)
+        altitude: altitude(H, phi, c.dec)
     };
 };
 
