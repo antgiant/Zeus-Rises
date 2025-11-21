@@ -5,15 +5,10 @@
 
 body {
   font-family: 'Architects Daughter', 'Helvetica Neue', Helvetica, Arial, serif;
-  isolation: isolate;
 
-
-  background-image: url('../img/stars.png');
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-size: cover;
-  background-attachment: fixed;
-  isolation: isolate;
+  background-repeat: no-repeat, repeat, no-repeat;
+  background-size: cover, auto, auto;
+  background-attachment: fixed, scroll, scroll;
 }
 body * {
   color: white;
@@ -22,7 +17,9 @@ body * {
 
 @media (prefers-color-scheme: dark) {
   body {
-    background-image: url('../img/stars.png');
-    background-color: #121212;
+    background-image: url('../img/stars.png'), #121212;
+    background-repeat: repeat, no-repeat;
+    background-size: auto, auto;
+    background-attachment: scroll, scroll;
   }
 }
