@@ -146,6 +146,47 @@ function computeTransmittance(height, angle) {
   return exp(tau);
 }
 
+function skyAlpha(r, g, b) {
+    // Normalize to 0..1
+    let R = r / 255;
+    let G = g / 255;
+    let B = b / 255;
+
+    // Approximate linear RGB (gamma removal)
+    let Rl = Math.pow(R, 2.2);
+    let Gl = Math.pow(G, 2.2);
+    let Bl = Math.pow(B, 2.2);
+
+    // Relative luminance (brightness)
+    let Y = 0.2126 * Rl + 0.7152 * Gl + 0.0722 * Bl;
+
+    // Brightness thresholds
+    const Y_night = 0.05;  // dark night
+    const Y_day   = 0.60;  // bright enough for no stars
+
+    // Clamp Y
+    let Yc = Math.min(Math.max(Y, Y_night), Y_day);
+
+    // Normalized brightness (0 = night, 1 = day)
+    let t = (Yc - Y_night) / (Y_day - Y_night);
+
+    // Stars fade faster when bright
+    const gamma = 2.0;
+    let alphaBrightness = Math.pow(1 - t, gamma);
+
+    // --- Blue suppression component ---
+    // Strongly blue skies should hide stars more aggressively
+    let blueness = B - Math.max(R, G, 0);  // how "more blue" than R/G it is
+    let bluenessNorm = (blueness + 0.2) / 0.7; // normalize to ~0..1
+    bluenessNorm = Math.min(Math.max(bluenessNorm, 0), 1);
+
+    // Reduce stars up to 70% more in strong blue skies
+    let alpha = alphaBrightness * (1 - 0.7 * bluenessNorm);
+
+    return Math.min(Math.max(alpha, 0), 1);
+}
+
+
 // Render sky at given solar elevation
 export default function renderGradient(altitude) {
   const cameraPosition = [0, GROUND_RADIUS, 0];
@@ -269,11 +310,10 @@ export default function renderGradient(altitude) {
   
   // Compose CSS gradient string from the ordered stops
   stops.sort((a, b) => a.percent - b.percent);
-  let transparency = (altitude > -1 ? 0.99 : (altitude < -18 ? 0.01 : (1 - (altitude/-18))));
   const colorStops = stops
     .map(
       ({ percent, rgb }) =>
-      `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${transparency}) ${
+      `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${skyAlpha(rgb[2], rgb[2], rgb[2])}) ${
           Math.round(percent * 100) / 100
         }%`,
     )
@@ -285,10 +325,3 @@ export default function renderGradient(altitude) {
     stops[stops.length - 1].rgb
   ];
 }
-/*
-    [-0.833, 'sunrise', 'sunset'],
-    [-0.3, 'sunriseEnd', 'sunsetStart'],
-    [-6, 'dawn', 'dusk'],
-    [-12, 'nauticalDawn', 'nauticalDusk'],
-    [-18, 'nightEnd', 'night'],
-*/
