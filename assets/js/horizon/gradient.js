@@ -269,17 +269,18 @@ export default function renderGradient(altitude) {
   
   // Compose CSS gradient string from the ordered stops
   stops.sort((a, b) => a.percent - b.percent);
+  let transparency = (altitude > -1 ? 0.01 : (altitude < -18 ? 0.99 : ((altitude/-17))));
   const colorStops = stops
     .map(
       ({ percent, rgb }) =>
-      `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]}) ${
+      `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${transparency}) ${
           Math.round(percent * 100) / 100
         }%`,
     )
     .join(", ");
-  let transparency = (altitude > -1 ? 1 : (altitude < -18 ? 99 : ((altitude/-17)*100)));
+
   return [
-    `linear-gradient(to bottom, ${colorStops}), transparent ${transparency}%`,
+    `linear-gradient(to bottom, ${colorStops})`,
     stops[0].rgb,
     stops[stops.length - 1].rgb
   ];
