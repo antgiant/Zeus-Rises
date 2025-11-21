@@ -12,7 +12,7 @@ export function refreshSky() {
     parseFloat(temp.longitude),
   );
   
-  const [gradient, topVec, bottomVec] = renderGradient(sunPos.altitude, sunPos.h);
+  const [gradient, topVec, bottomVec] = renderGradient(sunPos.altitude);
 
   document.body.style.backgroundImage = `url('../img/stars.png'), ${gradient}`;
   document.body.style.backgroundColor = topVec;
