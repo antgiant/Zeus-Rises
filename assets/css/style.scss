@@ -4,7 +4,17 @@
 @import "{{ site.theme }}";
 
 body {
+  --bg-gradient: white;
+  --bg-color: white;
   font-family: 'Architects Daughter', 'Helvetica Neue', Helvetica, Arial, serif;
+  
+  background:
+    var(--bg-gradient),
+    url('../img/stars.png'),
+    var(--bg-color);
+  background-repeat: no-repeat, repeat, no-repeat;
+  background-size: cover, auto, auto;
+  background-attachment: fixed, fixed, scroll;
 
 }
 #main-content * {
@@ -18,9 +28,11 @@ body {
 
 @media (prefers-color-scheme: dark) {
   body {
-    background-image: url('../img/stars.png'), #121212;
+    background: 
+      url('../img/stars.png'), 
+      #121212;
     background-repeat: repeat, no-repeat;
     background-size: auto, auto;
-    background-attachment: scroll, scroll;
+    background-attachment: fixed, scroll;
   }
 }
