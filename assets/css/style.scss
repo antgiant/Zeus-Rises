@@ -15,6 +15,11 @@ body {
   background-repeat: no-repeat, repeat, no-repeat;
   background-size: cover, auto, auto;
   background-attachment: fixed, fixed, scroll;
+  
+  //iOS background fix with fallback
+  min-height: 100vh;
+  min-height: 100svh;
+  min-height: 100lvh;
 
 }
 #main-content * {
