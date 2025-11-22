@@ -14,6 +14,6 @@ export function refreshSky() {
 
   const [gradient, topVec, bottomVec] = renderGradient(sunPos.altitude);
 
-  document.body.style.setProperty('--bg-gradient',  `${gradient}`);
-  document.body.style.setProperty('--bg-color',  `rgb(${topVec[0]}, ${topVec[1]}, ${topVec[2]})`);
+  document.documentElement.style.setProperty('--bg-gradient',  `${gradient}`);
+  document.documentElement.style.setProperty('--bg-color',  `rgb(${bottomVec[0]}, ${bottomVec[1]}, ${bottomVec[2]})`);
 }

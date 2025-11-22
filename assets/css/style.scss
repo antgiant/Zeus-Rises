@@ -3,7 +3,7 @@
 
 @import "{{ site.theme }}";
 
-body {
+html {
   --bg-gradient: none;
   --bg-color: white;
   font-family: 'Architects Daughter', 'Helvetica Neue', Helvetica, Arial, serif;
@@ -16,10 +16,7 @@ body {
   background-size: cover, auto, auto;
   background-attachment: fixed, fixed, scroll;
   
-  //iOS background fix with fallback
-  min-height: 100vh;
-  min-height: 100svh;
-  min-height: 100lvh;
+  height:100%
 
 }
 #main-content * {
@@ -32,7 +29,7 @@ body {
 }
 
 @media (prefers-color-scheme: dark) {
-  body {
+  html {
     background: 
       url('../img/stars.png'), 
       #121212;
