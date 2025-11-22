@@ -3,7 +3,7 @@
 
 @import "{{ site.theme }}";
 
-html {
+body {
   --bg-gradient: none;
   --bg-color: white;
   font-family: 'Architects Daughter', 'Helvetica Neue', Helvetica, Arial, serif;
@@ -29,7 +29,7 @@ html {
 }
 
 @media (prefers-color-scheme: dark) {
-  html {
+  body {
     background: 
       url('../img/stars.png'), 
       #121212;
