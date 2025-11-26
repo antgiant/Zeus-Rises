@@ -34,7 +34,7 @@ const FOV_DEG = 75;
 // Post-processing
 const EXPOSURE = 25.0;
 const GAMMA = 2.2;
-const SUNSET_BIAS_STRENGTH = 0.1;
+const BASE_SUNSET_BIAS_STRENGTH = 0.1;
 
 // ACES tonemapper (Knarkowicz)
 function aces(color) {
@@ -45,9 +45,114 @@ function aces(color) {
   });
 }
 
-// Enhance sunset hues (i.e., make warmer)
-function applySunsetBias([r, g, b]) {
-  // Relative luminance (sRGB)
+/**
+ * Twilight regime classification based on solar altitude (degrees).
+ *
+ * day          : alt > 0°
+ * civil        :   0° >= alt > -6°
+ * nautical     :  -6° >= alt > -12°
+ * astronomical : -12° >= alt > -18°
+ * night        : alt <= -18°
+ */
+
+// classifyTwilight(altDeg: number) -> "day" | "civil" | "nautical" | "astronomical" | "night"
+function classifyTwilight(altDeg) {
+  if (altDeg > 0) return "day";
+  if (altDeg > -6) return "civil";
+  if (altDeg > -12) return "nautical";
+  if (altDeg > -18) return "astronomical";
+  return "night";
+}
+
+// Exposure scaling vs twilight regime
+function exposureScaleForRegime(regime, altDeg) {
+  switch (regime) {
+    case "day":
+      // Base exposure; you can tweak this if noon feels too bright/dim.
+      return 1.0;
+
+    case "civil":
+      // Fade from ~1.0 at 0° to ~0.5 at -6°.
+      return 0.5 + 0.5 * (altDeg + 6) / 6;
+
+    case "nautical":
+      // Fade from 0.5 at -6° to ~0.25 at -12°.
+      return 0.25 + 0.25 * (altDeg + 12) / 6;
+
+    case "astronomical":
+      // Fade from 0.25 at -12° to ~0.1 at -18°.
+      return 0.1 + 0.15 * (altDeg + 18) / 6;
+
+    case "night":
+    default:
+      // Very dim, but not totally black so gradient is still visible.
+      return 0.05;
+  }
+}
+
+// Saturation scaling vs twilight regime
+function saturationScaleForRegime(regime) {
+  switch (regime) {
+    case "day":
+      return 1.0;
+    case "civil":
+      // Keep full color for golden/blue hour.
+      return 1.0;
+    case "nautical":
+      // Slightly less saturated as the sky darkens.
+      return 0.85;
+    case "astronomical":
+      // More muted colors in deep twilight.
+      return 0.6;
+    case "night":
+    default:
+      // Mostly neutral, dark sky.
+      return 0.4;
+  }
+}
+
+// Regime-based sunset bias strength
+function sunsetBiasStrengthForRegime(regime) {
+  switch (regime) {
+    case "day":
+      // Very subtle warm tweak during the day.
+      return BASE_SUNSET_BIAS_STRENGTH * 0.25;
+
+    case "civil":
+      // Strongest warm tint for golden/blue hour.
+      return BASE_SUNSET_BIAS_STRENGTH * 1.5;
+
+    case "nautical":
+      // Still somewhat warm near the horizon.
+      return BASE_SUNSET_BIAS_STRENGTH * 1.0;
+
+    case "astronomical":
+      // Very subtle; sky is mostly dark/neutral now.
+      return BASE_SUNSET_BIAS_STRENGTH * 0.4;
+
+    case "night":
+    default:
+      // Almost no warm bias at full night.
+      return BASE_SUNSET_BIAS_STRENGTH * 0.2;
+  }
+}
+
+// Simple saturation adjustment in roughly-linear RGB
+function applySaturation(color, saturation) {
+  const [r, g, b] = color;
+  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const grey = [lum, lum, lum];
+
+  return [
+    grey[0] + (r - grey[0]) * saturation,
+    grey[1] + (g - grey[1]) * saturation,
+    grey[2] + (b - grey[2]) * saturation,
+  ];
+}
+
+// Enhance sunset hues (i.e., make warmer / slightly stylized) with regime-based strength
+function applySunsetBias([r, g, b], strength) {
+  // Relative luminance (sRGB-ish)
   const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
   // Weight is higher for darker sky (near horizon/twilight), lower midday
   const w = 1.0 / (1.0 + 2.0 * lum);
@@ -187,9 +292,19 @@ function skyAlpha(r, g, b) {
 }
 
 
-// Render sky at given solar elevation
+// Render sky at given solar elevation (altitude in radians)
 export default function renderGradient(altitude) {
   const cameraPosition = [0, GROUND_RADIUS, 0];
+
+  // Convert altitude to degrees + classify twilight regime
+  const altDeg = (altitude * 180) / Math.PI;
+  const regime = classifyTwilight(altDeg);
+
+  // Per-regime exposure / saturation / sunset bias
+  const exposureScale = exposureScaleForRegime(regime, altDeg);
+  const saturationScale = saturationScaleForRegime(regime);
+  const sunsetBiasStrength = sunsetBiasStrengthForRegime(regime);
+
   const sunDirection = norm([Math.cos(altitude), Math.sin(altitude), 0]);
   
   // Projection constant (used to tilt rays upward)
@@ -258,9 +373,9 @@ export default function renderGradient(altitude) {
         );
         const transmittanceCameraToSample = [0, 0, 0];
         for (let k = 0; k < 3; k++) {
-          transmittanceCameraToSample[k] = isRayPointingDownwardAtStart ?
-            transmittanceToSpace[k] / transmittanceCameraToSpace[k] :
-            transmittanceCameraToSpace[k] / transmittanceToSpace[k];
+          transmittanceCameraToSample[k] = isRayPointingDownwardAtStart
+            ? transmittanceToSpace[k] / transmittanceCameraToSpace[k]
+            : transmittanceCameraToSpace[k] / transmittanceToSpace[k];
         }
         
         // Transmittance from sample toward the sun
@@ -294,11 +409,20 @@ export default function renderGradient(altitude) {
       
       for (let k = 0; k < 3; k++) inscattered[k] *= SUN_INTENSITY;
     }
-    
-    // Post-process: exposure → gentle sunset bias → ACES tonemap → gamma → 8-bit RGB
+
+    // Post-process:
+    // 1) Exposure scaled by twilight regime
+    // 2) Regime-based sunset bias
+    // 3) Regime-based saturation adjustment
+    // 4) ACES tonemap
+    // 5) Gamma
+    // 6) 8-bit RGB
+
     let color = inscattered.slice();
-    color = color.map((c) => c * EXPOSURE);
-    color = applySunsetBias(color);
+    const exposure = EXPOSURE * exposureScale;
+    color = color.map((c) => c * exposure);
+    color = applySunsetBias(color, sunsetBiasStrength);
+    color = applySaturation(color, saturationScale);
     color = aces(color);
     color = color.map((c) => Math.pow(c, 1.0 / GAMMA));
     const rgb = color.map((c) => Math.round(clamp(c, 0, 1) * 255));
@@ -313,9 +437,11 @@ export default function renderGradient(altitude) {
   const colorStops = stops
     .map(
       ({ percent, rgb }) =>
-      `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${skyAlpha(rgb[2], rgb[2], rgb[2])}) ${
-          Math.round(percent * 100) / 100
-        }%`,
+        `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${skyAlpha(
+          rgb[2],
+          rgb[2],
+          rgb[2],
+        )}) ${Math.round(percent * 100) / 100}%`,
     )
     .join(", ");
 
