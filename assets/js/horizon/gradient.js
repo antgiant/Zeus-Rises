@@ -156,11 +156,17 @@ function applySunsetBias([r, g, b], strength) {
   const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
   // Weight is higher for darker sky (near horizon/twilight), lower midday
   const w = 1.0 / (1.0 + 2.0 * lum);
-  const k = SUNSET_BIAS_STRENGTH; // overall strength
+
+  const k = strength; // overall strength passed in from regime
   const rb = 1.0 + 0.5 * k * w; // boost red
   const gb = 1.0 - 0.5 * k * w; // suppress green
   const bb = 1.0 + 1.0 * k * w; // boost blue
-  return [Math.max(0, r * rb), Math.max(0, g * gb), Math.max(0, b * bb)];
+
+  return [
+    Math.max(0, r * rb),
+    Math.max(0, g * gb),
+    Math.max(0, b * bb),
+  ];
 }
 
 function rayleighPhase(angle) {
