@@ -11,8 +11,14 @@ export function refreshSky() {
     parseFloat(temp.latitude),
     parseFloat(temp.longitude),
   );
+  
+  let alt = sunPos.altitude;
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  if (prefersDark) {
+    alt = Math.PI/-2;
+  }
 
-  const [gradient, topVec, bottomVec] = renderGradient(sunPos.altitude);
+  const [gradient, topVec, bottomVec] = renderGradient(alt);
 
   document.body.style.setProperty('--bg-gradient',  `${gradient}`);
   document.body.style.setProperty('--bg-color',  `rgb(${bottomVec[0]}, ${bottomVec[1]}, ${bottomVec[2]})`);

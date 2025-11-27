@@ -27,14 +27,3 @@ body {
 #main-content h1 {
   color: #b8b8b8 !important;
 }
-
-@media (prefers-color-scheme: dark) {
-  body {
-    background: 
-      url('../img/stars.png'), 
-      #121212;
-    background-repeat: repeat, no-repeat;
-    background-size: auto, auto;
-    background-attachment: fixed, scroll;
-  }
-}
