@@ -35,7 +35,7 @@ export function refreshSky(dummy) {
   );
   
   let alt = sunPos.altitude;
-  console.log("Refreshing Sky ("+now.toLocaleTimeString() + " - " + altitude+" - "+(altitude * 180) / Math.PI+")");
+  console.log("Refreshing Sky ("+now.toLocaleTimeString() + " - " + alt+" - "+(alt * 180) / Math.PI+")");
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
   if (prefersDark) {
     alt = Math.PI / -2;
