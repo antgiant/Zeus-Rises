@@ -32,7 +32,7 @@ const SAMPLES = 32; // used for gradient stops and integration steps
 const FOV_DEG = 75;
 
 // Post-processing
-const EXPOSURE = 25.0;
+const EXPOSURE = 80.0;
 const GAMMA = 2.2;
 const BASE_SUNSET_BIAS_STRENGTH = 0.1;
 const NIGHT_COLOR_FLOOR = 0.003; // keep a faint glow so night gradients aren't crushed to black
@@ -73,12 +73,12 @@ function exposureScaleForRegime(regime, altDeg) {
       return 1.0;
 
     case "civil":
-      // Fade from ~1.0 at 0° to ~0.7 at -6°.
-      return 0.7 + 0.3 * (altDeg + 6) / 6;
+      // Keep civil very bright: ~2.0 at 0° to ~1.2 at -6°.
+      return 1.2 + 0.8 * (altDeg + 6) / 6;
 
     case "nautical":
-      // Fade from ~0.7 at -6° to ~0.2 at -12°.
-      return 0.2 + 0.3 * (altDeg + 12) / 6;
+      // Fade from ~1.2 at -6° to ~0.35 at -12°.
+      return 0.35 + 0.85 * (altDeg + 12) / 6;
 
     case "astronomical":
       // Fade from ~0.2 at -12° to ~0.05 at -18°.
@@ -258,7 +258,7 @@ function computeTransmittance(height, angle) {
   return exp(tau);
 }
 
-function skyAlpha(r, g, b) {
+function skyAlpha(r, g, b, regime, altDeg) {
     // Normalize to 0..1
     let R = r / 255;
     let G = g / 255;
@@ -273,7 +273,7 @@ function skyAlpha(r, g, b) {
     let Y = 0.2126 * Rl + 0.7152 * Gl + 0.0722 * Bl;
 
     // Brightness thresholds
-    const Y_night = 0.03;  // dark night
+    const Y_night = 0.0;   // allow alpha to keep changing all the way to black
     const Y_day   = 0.70;  // bright enough for no stars
 
     // Clamp Y
@@ -286,14 +286,20 @@ function skyAlpha(r, g, b) {
     const gamma = 1.5;
     let alphaBrightness = Math.pow(1 - t, gamma);
 
+    // During day/civil twilight, force full opacity (no stars)
+    if (regime === "day" || regime === "civil") {
+      return 1;
+    }
+
     // --- Blue suppression component ---
     // Strongly blue skies should hide stars more aggressively
     let blueness = B - Math.max(R, G, 0);  // how "more blue" than R/G it is
-    let bluenessNorm = (blueness + 0.2) / 0.7; // normalize to ~0..1
-    bluenessNorm = Math.min(Math.max(bluenessNorm, 0), 1);
+    // Normalize to ~0..1 without offset; gate by brightness (t) so night can still go fully dark
+    let bluenessNorm = Math.min(Math.max(blueness / 0.7, 0), 1);
+    const blueFactor = 1 - 0.5 * bluenessNorm * t;
 
-    // Reduce stars up to 50% more in strong blue skies
-    let alpha = alphaBrightness * (1 - 0.5 * bluenessNorm);
+    // Reduce stars in blue skies, but keep headroom for full night darkness
+    let alpha = alphaBrightness * blueFactor;
 
     return 1 - Math.min(Math.max(alpha, 0), 1);
 }
@@ -428,6 +434,11 @@ export default function renderGradient(altitude) {
     let color = inscattered.slice();
     const exposure = EXPOSURE * exposureScale;
     color = color.map((c) => c * exposure);
+    // Add a small ambient lift during civil twilight so the sky doesn't crush to black while stars are hidden
+    if (regime === "civil") {
+      const civilAmbient = 0.02;
+      color = color.map((c) => c + civilAmbient);
+    }
     color = applySunsetBias(color, sunsetBiasStrength);
     color = applySaturation(color, saturationScale);
     color = aces(color);
@@ -449,6 +460,8 @@ export default function renderGradient(altitude) {
           rgb[0],
           rgb[1],
           rgb[2],
+          regime,
+          altDeg,
         )}) ${Math.round(percent * 100) / 100}%`,
     )
     .join(", ");
