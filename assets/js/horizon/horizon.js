@@ -19,15 +19,12 @@ function getSliderTimeAsDateObject() {
   selectedDateTime.setMinutes(minutes);
   selectedDateTime.setSeconds(0); // Optional: clear seconds and milliseconds
   selectedDateTime.setMilliseconds(0);
- 
-  console.log(selectedDateTime.toLocaleTimeString());
   
   // 5. Return the full Date object
   return selectedDateTime;
 }
 
 export function refreshSky(dummy) {
-  console.log("Refreshing Sky");
   //Estimate location based on timezone
   const temp = Virgo.getLocation();
   const now = getSliderTimeAsDateObject();
@@ -38,6 +35,7 @@ export function refreshSky(dummy) {
   );
   
   let alt = sunPos.altitude;
+  console.log("Refreshing Sky ("+now.toLocaleTimeString() + " - " + altitude+" - "+(altitude * 180) / Math.PI+")");
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
   if (prefersDark) {
     alt = Math.PI / -2;
