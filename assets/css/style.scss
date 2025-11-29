@@ -16,7 +16,8 @@ body {
   background-size: cover, auto, auto;
   background-attachment: fixed, fixed, scroll;
   
-  height:100%
+  height: 100%
+}
 
 }
 #main-content *, footer {
@@ -26,4 +27,47 @@ body {
 
 #main-content h1 {
   color: #b8b8b8 !important;
+}
+
+.time-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  background-color: #f4f4f4;
+}
+
+/* Time display above the slider */
+.time-display {
+  text-align: center;
+  font-size: 1.5em;
+  font-weight: bold;
+  margin-bottom: 10px;
+  font-family: monospace;
+  width: 100%;
+  color: #007bff;
+  /* Highlight the default time */
+}
+
+/* Style for the start/end labels (Midnight) */
+.time-label {
+  white-space: nowrap;
+  font-size: 1.2em;
+  padding: 0 15px;
+  font-family: Arial, sans-serif;
+  color: #333;
+}
+
+/* Style for the slider input element */
+.full-width-slider {
+  flex-grow: 1;
+  width: 100%;
+}
+
+/* Optional: Style the track for better visibility */
+.full-width-slider::-webkit-slider-runnable-track {
+  height: 8px;
+  background: #ddd;
+  border-radius: 4px;
 }
