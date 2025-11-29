@@ -2,7 +2,8 @@ import renderGradient from "./gradient.js";
 import { getPosition } from "./suncalc/suncalc.js";
 import Virgo from '../virgo/virgo.js';
 
-export function refreshSky() {
+export function refreshSky(dummy) {
+  console.log("Refreshing Sky");
   //Estimate location based on timezone
   const temp = Virgo.getLocation();
   const now = new Date();
