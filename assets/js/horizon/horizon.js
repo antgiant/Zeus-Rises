@@ -19,6 +19,8 @@ function getSliderTimeAsDateObject() {
   selectedDateTime.setMinutes(minutes);
   selectedDateTime.setSeconds(0); // Optional: clear seconds and milliseconds
   selectedDateTime.setMilliseconds(0);
+ 
+  console.log(selectedDateTime.toLocaleTimeString());
   
   // 5. Return the full Date object
   return selectedDateTime;
