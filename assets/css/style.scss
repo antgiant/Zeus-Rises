@@ -71,3 +71,9 @@ body {
   background: #ddd;
   border-radius: 4px;
 }
+
+@media (prefers-color-scheme: dark) {
+  .time-container {
+    display: none;
+  }
+}
