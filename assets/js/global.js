@@ -4,4 +4,3 @@ refreshSky();
 
 // Listen for changes to dark mode preference and update the sky color
 mediaQuery.addEventListener("change", refreshSky);
-mediaQuery.addListener(refreshSky);
