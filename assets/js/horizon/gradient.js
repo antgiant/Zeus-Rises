@@ -35,6 +35,7 @@ const FOV_DEG = 75;
 const EXPOSURE = 25.0;
 const GAMMA = 2.2;
 const BASE_SUNSET_BIAS_STRENGTH = 0.1;
+const NIGHT_COLOR_FLOOR = 0.003; // keep a faint glow so night gradients aren't crushed to black
 
 // ACES tonemapper (Knarkowicz)
 function aces(color) {
@@ -72,21 +73,21 @@ function exposureScaleForRegime(regime, altDeg) {
       return 1.0;
 
     case "civil":
-      // Fade from ~1.0 at 0° to ~0.5 at -6°.
-      return 0.5 + 0.5 * (altDeg + 6) / 6;
+      // Fade from ~1.0 at 0° to ~0.7 at -6°.
+      return 0.7 + 0.3 * (altDeg + 6) / 6;
 
     case "nautical":
-      // Fade from 0.5 at -6° to ~0.25 at -12°.
-      return 0.25 + 0.25 * (altDeg + 12) / 6;
+      // Fade from ~0.7 at -6° to ~0.2 at -12°.
+      return 0.2 + 0.3 * (altDeg + 12) / 6;
 
     case "astronomical":
-      // Fade from 0.25 at -12° to ~0.1 at -18°.
-      return 0.1 + 0.15 * (altDeg + 18) / 6;
+      // Fade from ~0.2 at -12° to ~0.05 at -18°.
+      return 0.05 + 0.15 * (altDeg + 18) / 6;
 
     case "night":
     default:
       // Very dim, but not totally black so gradient is still visible.
-      return 0.05;
+      return 0.02;
   }
 }
 
@@ -100,14 +101,14 @@ function saturationScaleForRegime(regime) {
       return 1.0;
     case "nautical":
       // Slightly less saturated as the sky darkens.
-      return 0.85;
+      return 0.75;
     case "astronomical":
       // More muted colors in deep twilight.
-      return 0.6;
+      return 0.5;
     case "night":
     default:
       // Mostly neutral, dark sky.
-      return 0.4;
+      return 0.35;
   }
 }
 
@@ -123,12 +124,12 @@ function sunsetBiasStrengthForRegime(regime) {
       return BASE_SUNSET_BIAS_STRENGTH * 1.5;
 
     case "nautical":
-      // Still somewhat warm near the horizon.
-      return BASE_SUNSET_BIAS_STRENGTH * 1.0;
+      // Warmth starts to recede in nautical twilight.
+      return BASE_SUNSET_BIAS_STRENGTH * 0.8;
 
     case "astronomical":
       // Very subtle; sky is mostly dark/neutral now.
-      return BASE_SUNSET_BIAS_STRENGTH * 0.4;
+      return BASE_SUNSET_BIAS_STRENGTH * 0.3;
 
     case "night":
     default:
@@ -272,8 +273,8 @@ function skyAlpha(r, g, b) {
     let Y = 0.2126 * Rl + 0.7152 * Gl + 0.0722 * Bl;
 
     // Brightness thresholds
-    const Y_night = 0.05;  // dark night
-    const Y_day   = 0.60;  // bright enough for no stars
+    const Y_night = 0.03;  // dark night
+    const Y_day   = 0.70;  // bright enough for no stars
 
     // Clamp Y
     let Yc = Math.min(Math.max(Y, Y_night), Y_day);
@@ -282,7 +283,7 @@ function skyAlpha(r, g, b) {
     let t = (Yc - Y_night) / (Y_day - Y_night);
 
     // Stars fade faster when bright
-    const gamma = 2.0;
+    const gamma = 1.5;
     let alphaBrightness = Math.pow(1 - t, gamma);
 
     // --- Blue suppression component ---
@@ -291,8 +292,8 @@ function skyAlpha(r, g, b) {
     let bluenessNorm = (blueness + 0.2) / 0.7; // normalize to ~0..1
     bluenessNorm = Math.min(Math.max(bluenessNorm, 0), 1);
 
-    // Reduce stars up to 70% more in strong blue skies
-    let alpha = alphaBrightness * (1 - 0.7 * bluenessNorm);
+    // Reduce stars up to 50% more in strong blue skies
+    let alpha = alphaBrightness * (1 - 0.5 * bluenessNorm);
 
     return 1 - Math.min(Math.max(alpha, 0), 1);
 }
@@ -431,6 +432,7 @@ export default function renderGradient(altitude) {
     color = applySaturation(color, saturationScale);
     color = aces(color);
     color = color.map((c) => Math.pow(c, 1.0 / GAMMA));
+    color = color.map((c) => Math.max(c, NIGHT_COLOR_FLOOR));
     const rgb = color.map((c) => Math.round(clamp(c, 0, 1) * 255));
     
     // 0% at zenith (top), 100% at horizon (bottom)
@@ -444,8 +446,8 @@ export default function renderGradient(altitude) {
     .map(
       ({ percent, rgb }) =>
         `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${skyAlpha(
-          rgb[2],
-          rgb[2],
+          rgb[0],
+          rgb[1],
           rgb[2],
         )}) ${Math.round(percent * 100) / 100}%`,
     )
