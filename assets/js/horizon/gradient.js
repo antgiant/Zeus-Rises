@@ -152,45 +152,6 @@ function computeTransmittance(height, angle) {
   return exp(tau);
 }
 
-/**
- * Precomputes twilight boost factors for a given sun altitude.
- * Since we're rendering a gradient from zenith to horizon at fixed ground level,
- * we can compute per-altitude constants once and reuse them.
- *
- * @param {number} altitude - Sun altitude in radians
- * @returns {object} Precomputed factors for this sun altitude
- */
-function computeTwilightFactors(altitude) {
-  const altDeg = (altitude * 180) / Math.PI;
-
-  if (altDeg < 0) {
-    // Twilight regime
-    const earthRadius = 6360e3;
-    const sunAngleRad = Math.abs(altitude);
-
-    // Height at which the sun's ray grazes the Earth (geometric shadow boundary)
-    const shadowHeight = earthRadius * (1.0 / Math.cos(sunAngleRad) - 1.0);
-
-    // Twilight strength: how much to boost shadowed regions
-    const twilightStrength = altDeg > -12
-      ? Math.pow((12 + altDeg) / 12, 0.5)  // 1.0 at 0°, 0.0 at -12°
-      : 0.0;
-
-    return {
-      isTwilight: true,
-      shadowHeight: shadowHeight,
-      twilightStrength: twilightStrength,
-      maxBoost: 3.0
-    };
-  } else {
-    // Daytime regime
-    return {
-      isTwilight: false,
-      daytimeBoost: 0.1  // Small horizon boost during day
-    };
-  }
-}
-
 function skyAlpha(r, g, b) {
     // Normalize to 0..1
     let R = r / 255;
@@ -236,13 +197,10 @@ function skyAlpha(r, g, b) {
 export default function renderGradient(altitude) {
   const cameraPosition = [0, GROUND_RADIUS, 0];
   const sunDirection = norm([Math.cos(altitude), Math.sin(altitude), 0]);
-
-  // Precompute twilight factors once per render (not per sample!)
-  const twilightFactors = computeTwilightFactors(altitude);
-
+  
   // Projection constant (used to tilt rays upward)
   const focalZ = 1.0 / Math.tan((FOV_DEG * 0.5 * PI) / 180.0);
-
+  
   const stops = [];
   for (let i = 0; i < SAMPLES; i++) {
     const s = i / (SAMPLES - 1);
@@ -331,26 +289,7 @@ export default function renderGradient(altitude) {
           const mieTerm = MIE_SCATTER * opticalDensityMie * phaseM;
           scatteredRgb[k] = transmittanceLight[k] * (rayleighTerm + mieTerm);
         }
-
-        // Apply twilight boost for samples in Earth's shadow
-        // During twilight, samples in shadow receive indirect light from the still-illuminated
-        // upper atmosphere. We approximate this by adding a contribution proportional to
-        // the scattering coefficients and viewing geometry.
-        if (twilightFactors.isTwilight && sampleHeight < twilightFactors.shadowHeight) {
-          // Compute an "effective" indirect illumination for this shadowed sample
-          // This represents light scattered from the illuminated upper atmosphere
-          const horizonFactor = s * s;  // stronger when looking toward horizon
-          const effectiveIndirectLight = twilightFactors.twilightStrength * horizonFactor;
-
-          for (let k = 0; k < 3; k++) {
-            const rayleighTerm = RAYLEIGH_SCATTER[k] * opticalDensityRay * phaseR;
-            const mieTerm = MIE_SCATTER * opticalDensityMie * phaseM;
-
-            // Add indirect contribution (scaled down from direct sunlight)
-            scatteredRgb[k] += effectiveIndirectLight * (rayleighTerm + mieTerm) * 0.3;
-          }
-        }
-
+        
         // Accumulate along the ray
         for (let k = 0; k < 3; k++) {
           inscattered[k] +=
