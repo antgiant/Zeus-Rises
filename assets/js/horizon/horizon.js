@@ -64,13 +64,13 @@ function getLightPollutionOffset(bortle, sunAltitude) {
   const baseOffsets = {
     1: 0.0,   // Pristine dark sky
     2: 0.1,   // Typical dark sky
-    3: 0.3,   // Rural
-    4: 0.75,  // Rural/suburban
-    5: 1.5,   // Suburban
-    6: 2.5,   // Bright suburban
-    7: 3.5,   // Urban
-    8: 4.5,   // City
-    9: 5.5    // Inner city
+    3: 0.2,   // Rural
+    4: 1.0,  // Rural/suburban
+    5: 2.0,   // Suburban
+    6: 3.0,   // Bright suburban
+    7: 4.0,   // Urban
+    8: 5.0,   // City
+    9: 6.0    // Inner city
   };
 
   // Clamp to avoid overly aggressive boosts if an unexpected value is provided
