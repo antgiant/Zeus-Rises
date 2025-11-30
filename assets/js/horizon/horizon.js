@@ -127,15 +127,15 @@ export function refreshSky(dummy) {
 
   let alt = Math.max(...candidateAltitudes);
 
-  console.log("Refreshing Sky (" + now.toLocaleTimeString() +
+/*   console.log("Refreshing Sky (" + now.toLocaleTimeString() +
               " | Sun: " + (sunPos.altitude * 180 / Math.PI).toFixed(1) + "°" +
               " + MS: " + (multipleScatteringOffset * 180 / Math.PI).toFixed(1) + "°" +
               " + LP(B" + lightPollution + "): " + (lightPollutionOffset * 180 / Math.PI).toFixed(1) + "°" +
               " = " + (alt * 180 / Math.PI).toFixed(1) + "°)");
-
+ */
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
   if (prefersDark) {
-    alt = Math.PI / -2;
+    alt = lightPollutionOffset - (3 * Math.PI / 180);
   }
 
   const [gradient, topVec, bottomVec] = renderGradient(alt);
