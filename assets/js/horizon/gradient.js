@@ -52,7 +52,7 @@ function applySunsetBias([r, g, b]) {
   // Weight is higher for darker sky (near horizon/twilight), lower midday
   const w = 1.0 / (1.0 + 2.0 * lum);
 
-  const k = strength; // overall strength passed in from regime
+  const k = SUNSET_BIAS_STRENGTH; // use the constant
   const rb = 1.0 + 0.5 * k * w; // boost red
   const gb = 1.0 - 0.5 * k * w; // suppress green
   const bb = 1.0 + 1.0 * k * w; // boost blue
