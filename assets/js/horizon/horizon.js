@@ -76,7 +76,13 @@ function getLightPollutionOffset(bortle, sunAltitude) {
     9: 22    // Inner city: sky never truly dark
   };
 
-  const baseOffset = baseOffsets[bortle] !== undefined ? baseOffsets[bortle] : 2;
+  // Large offsets can invert the twilight curve; cap to keep altitude monotonic
+  const MAX_BORTLE_OFFSET_DEG = 10;
+  const rawBaseOffset = baseOffsets[bortle];
+  const baseOffset = Math.min(
+    rawBaseOffset !== undefined ? rawBaseOffset : 2,
+    MAX_BORTLE_OFFSET_DEG,
+  );
 
   // Fade the effect based on sun altitude
   // Maximum effect when sun is around -18° (astronomical twilight)
@@ -136,17 +142,25 @@ export function refreshSky(dummy) {
     parseFloat(temp.longitude),
   );
 
-  // Start with physical sun altitude
-  let alt = sunPos.altitude;
-
-  // Add multiple scattering offset (atmospheric effects)
   const multipleScatteringOffset = getMultipleScatteringOffset(sunPos.altitude);
-  alt += multipleScatteringOffset;
 
-  // Add light pollution offset (artificial sky glow from nearby cities)
   const lightPollution = temp.lightPollution || 4; // Default to Bortle 4 if not available
   const lightPollutionOffset = getLightPollutionOffset(lightPollution, sunPos.altitude);
-  alt += lightPollutionOffset;
+
+  // Combine offsets as floors instead of stacking additions to avoid a "reverse sunrise"
+  // when the sun crosses the horizon.
+  const candidateAltitudes = [
+    sunPos.altitude,
+    sunPos.altitude + multipleScatteringOffset,
+    sunPos.altitude + lightPollutionOffset,
+  ];
+
+  // Keep twilight brightening reasonable when the sun is already below the horizon.
+  const twilightCap = (1 * Math.PI) / 180;
+  let alt = Math.max(...candidateAltitudes);
+  if (sunPos.altitude < 0) {
+    alt = Math.min(alt, twilightCap);
+  }
 
   console.log("Refreshing Sky (" + now.toLocaleTimeString() +
               " | Sun: " + (sunPos.altitude * 180 / Math.PI).toFixed(1) + "°" +
