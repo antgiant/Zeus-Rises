@@ -15,35 +15,33 @@ import Virgo from '../virgo/virgo.js';
 function getMultipleScatteringOffset(actualAltitude) {
   const altDeg = actualAltitude * 180 / Math.PI;
 
-  // Maximum offset occurs around twilight (-6 to -10 degrees)
-  // This is when multiple scattering is most significant relative to direct light
-  const maxOffset = 16.0 * Math.PI / 180; // ~16 degrees
+  // Multiple scattering adds indirect illumination, but we need to be careful
+  // not to shift sunset/sunrise too much. Real sunset colors begin when sun
+  // is still 6-10 degrees above the horizon.
 
-  // Minimum offset for high sun (diminishing returns above 45 degrees)
-  const minOffset = 3.0 * Math.PI / 180; // ~3 degrees
+  // For high sun: minimal offset needed (single scattering is fairly accurate)
+  // For low sun near horizon: moderate offset to account for path length
+  // For sun below horizon: larger offset as multiple scattering dominates
 
-  // Center the peak effect around -8 degrees (civil twilight)
-  const peakAltitude = -8.0;
-
-  // Width of the transition (how quickly the effect falls off)
-  const transitionWidth = 25.0;
-
-  // Gaussian-like falloff centered at twilight
-  // This creates a smooth curve that peaks during twilight and decreases
-  // as the sun gets higher or lower
-  const gaussian = Math.exp(-Math.pow((altDeg - peakAltitude) / transitionWidth, 2));
-
-  // Blend between min and max offset based on the gaussian
-  const offset = minOffset + (maxOffset - minOffset) * gaussian;
-
-  // For very low sun angles (deep twilight), use an exponential decay
-  // to avoid the sky being too bright when sun is far below horizon
-  if (altDeg < -12) {
-    const deepTwilightFactor = Math.exp((altDeg + 12) / 8.0); // decay over ~8 degrees
-    return offset * deepTwilightFactor;
+  if (altDeg > 20) {
+    // High sun: very minimal correction needed
+    return 2.0 * Math.PI / 180;
+  } else if (altDeg > -6) {
+    // Sun above horizon to civil twilight: gentle increase
+    // Use a smooth curve that doesn't shift sunset colors too much
+    const t = (20 - altDeg) / 26; // 0 at 20°, 1 at -6°
+    const smoothT = t * t * (3 - 2 * t); // smooth step function
+    return (2.0 + smoothT * 6.0) * Math.PI / 180; // 2° to 8°
+  } else if (altDeg > -12) {
+    // Civil to nautical twilight: peak effect
+    const t = (-6 - altDeg) / 6; // 0 at -6°, 1 at -12°
+    const smoothT = t * t * (3 - 2 * t);
+    return (8.0 + smoothT * 6.0) * Math.PI / 180; // 8° to 14°
+  } else {
+    // Deep twilight: exponential decay to avoid overly bright night sky
+    const deepTwilightFactor = Math.exp((altDeg + 12) / 8.0);
+    return 14.0 * Math.PI / 180 * deepTwilightFactor;
   }
-
-  return offset;
 }
 
 function getSliderTimeAsDateObject() {
