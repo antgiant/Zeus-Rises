@@ -156,15 +156,10 @@ export function refreshSky(dummy) {
   ];
 
   // Keep twilight brightening reasonable when the sun is already below the horizon.
-  // Use a smooth cap that relaxes toward the true altitude over ~10° to avoid cliffs.
   const twilightCap = (1 * Math.PI) / 180;
-  const twilightBlendSpan = (10 * Math.PI) / 180;
   let alt = Math.max(...candidateAltitudes);
   if (sunPos.altitude < 0) {
-    const depth = Math.min(-sunPos.altitude, twilightBlendSpan);
-    const t = depth / twilightBlendSpan; // 0 at horizon, 1 after ~10°
-    const allowedMax = twilightCap * (1 - t) + sunPos.altitude * t;
-    alt = Math.min(alt, allowedMax);
+    alt = Math.min(alt, twilightCap);
   }
 
   console.log("Refreshing Sky (" + now.toLocaleTimeString() +
