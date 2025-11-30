@@ -155,12 +155,7 @@ export function refreshSky(dummy) {
     sunPos.altitude + lightPollutionOffset,
   ];
 
-  // Keep twilight brightening reasonable when the sun is already below the horizon.
-  const twilightCap = (1 * Math.PI) / 180;
   let alt = Math.max(...candidateAltitudes);
-  if (sunPos.altitude < 0) {
-    alt = Math.min(alt, twilightCap);
-  }
 
   console.log("Refreshing Sky (" + now.toLocaleTimeString() +
               " | Sun: " + (sunPos.altitude * 180 / Math.PI).toFixed(1) + "°" +
