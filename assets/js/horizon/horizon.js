@@ -111,6 +111,7 @@ export function refreshSky(dummy) {
   //Estimate location based on timezone
   const temp = Virgo.getLocation();
   const includeLightPollution = lightPollutionEnabled();
+  localStorage.setItem("lightPollution", JSON.stringify(includeLightPollution));
   const now = getSliderTimeAsDateObject();
   const sunPos = getPosition(
     now,
