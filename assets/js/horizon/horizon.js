@@ -33,14 +33,16 @@ function getMultipleScatteringOffset(actualAltitude) {
     const smoothT = t * t * (3 - 2 * t); // smooth step function
     return (2.0 + smoothT * 6.0) * Math.PI / 180; // 2° to 8°
   } else if (altDeg > -12) {
-    // Civil to nautical twilight: peak effect
+    // Civil to nautical twilight: slower increase to avoid reverse sunset
+    // The offset must increase slower than altitude decreases (rate < 1.0)
     const t = (-6 - altDeg) / 6; // 0 at -6°, 1 at -12°
     const smoothT = t * t * (3 - 2 * t);
-    return (8.0 + smoothT * 6.0) * Math.PI / 180; // 8° to 14°
+    return (8.0 + smoothT * 3.0) * Math.PI / 180; // 8° to 11° (only 3° increase over 6° range)
   } else {
-    // Deep twilight: exponential decay to avoid overly bright night sky
-    const deepTwilightFactor = Math.exp((altDeg + 12) / 8.0);
-    return 14.0 * Math.PI / 180 * deepTwilightFactor;
+    // Deep twilight: slow linear decay to avoid overly bright night sky
+    // Linear decay from 11° at -12° to 0° at -30°
+    const t = Math.max(0, (-12 - altDeg) / 18); // 0 at -12°, 1 at -30°
+    return (11.0 * (1 - t)) * Math.PI / 180;
   }
 }
 
