@@ -60,20 +60,24 @@ function getLightPollutionOffset(bortle, sunAltitude) {
   const altDeg = sunAltitude * 180 / Math.PI;
 
   // Base offset by Bortle class (in degrees)
-  // These values are calibrated to match real-world sky brightness
+  // These values are intentionally conservative to avoid overpowering twilight
   const baseOffsets = {
-    1: 0,    // Pristine dark sky: no artificial brightening
-    2: 0.5,  // Typical dark sky: minimal effect
-    3: 1,    // Rural: slight brightening
-    4: 2,    // Rural/suburban: noticeable
-    5: 4,    // Suburban: significant sky glow
-    6: 7,    // Bright suburban: major impact
-    7: 11,   // Urban: severe light dome
-    8: 16,   // City: extreme brightening
-    9: 22    // Inner city: sky never truly dark
+    1: 0.0,  // Pristine dark sky: no artificial brightening
+    2: 0.2,  // Typical dark sky: minimal effect
+    3: 0.6,  // Rural: slight brightening
+    4: 1.0,  // Rural/suburban: modest
+    5: 2.0,  // Suburban: noticeable sky glow
+    6: 3.5,  // Bright suburban
+    7: 5.0,  // Urban
+    8: 6.0,  // City
+    9: 7.5   // Inner city: sky never truly dark
   };
 
-  return baseOffsets[bortle] * Math.PI / 180;
+  // Clamp to avoid overly aggressive boosts if an unexpected value is provided
+  const base = baseOffsets[bortle] !== undefined ? baseOffsets[bortle] : 2.0;
+  const capped = Math.min(base, 7.5);
+
+  return capped * Math.PI / 180;
 }
 
 function getSliderTimeAsDateObject() {
