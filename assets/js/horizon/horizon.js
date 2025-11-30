@@ -33,7 +33,7 @@ export function refreshSky(dummy) {
     parseFloat(temp.latitude),
     parseFloat(temp.longitude),
   );
-  const twilight = 16 * Math.PI / 180; // Twilight is lasts 18 degrees, this simplified single scattering model can handle 2 degrees of that
+  const twilight = 13.5 * Math.PI / 180; // Twilight is lasts 18 degrees, this simplified single scattering model can handle 2 degrees of that
   let alt = sunPos.altitude + twilight;
   console.log("Refreshing Sky ("+now.toLocaleTimeString() + " - " + alt+" - "+(alt * 180) / Math.PI+")");
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
