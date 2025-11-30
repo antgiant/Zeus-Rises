@@ -12,14 +12,6 @@ if (lightPollutionStatus == null) {
   
 }
 
-function set_element(element_name, element_value, data = "localStorage") {
-  if (data === "localStorage") {
-    
-  } else {
-    data[element_name] = element_value;
-  }
-}
-
 function setDefaultTime() {
   // 1. Get the current date and time
   const now = new Date();
