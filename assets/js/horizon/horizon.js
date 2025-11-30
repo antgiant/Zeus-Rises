@@ -147,15 +147,7 @@ export function refreshSky(dummy) {
   const lightPollution = temp.lightPollution || 4; // Default to Bortle 4 if not available
   const lightPollutionOffset = getLightPollutionOffset(lightPollution, sunPos.altitude);
 
-  // Combine offsets as floors instead of stacking additions to avoid a "reverse sunrise"
-  // when the sun crosses the horizon.
-  const candidateAltitudes = [
-    sunPos.altitude,
-    sunPos.altitude + multipleScatteringOffset,
-    sunPos.altitude + lightPollutionOffset,
-  ];
-
-  let alt = Math.max(...candidateAltitudes);
+  let alt = sunPos.altitude + multipleScatteringOffset + lightPollutionOffset;
 
   console.log("Refreshing Sky (" + now.toLocaleTimeString() +
               " | Sun: " + (sunPos.altitude * 180 / Math.PI).toFixed(1) + "°" +
