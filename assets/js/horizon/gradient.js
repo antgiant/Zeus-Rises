@@ -152,6 +152,75 @@ function computeTransmittance(height, angle) {
   return exp(tau);
 }
 
+/**
+ * Computes a multiple scattering approximation factor.
+ * This accounts for secondary/tertiary scattering that the single-scattering
+ * model misses.
+ *
+ * @param {number} altitude - Sun altitude in radians
+ * @param {number} viewS - View direction parameter (0 = zenith, 1 = horizon)
+ * @param {number} sampleHeight - Height of the sample point in the atmosphere
+ * @returns {number} Multiplicative boost factor (typically 1.0 to 3.0)
+ */
+function getMultipleScatterBoost(altitude, viewS, sampleHeight) {
+  const altDeg = (altitude * 180) / Math.PI;
+
+  // 1. PATH LENGTH FACTOR
+  // Light near the horizon travels through much more atmosphere
+  // This is based on the Chapman function approximation
+  const zenithAngle = Math.acos(1 - viewS); // Angle from zenith
+
+  // Simplified Chapman function for optical air mass
+  const cosZenith = Math.cos(zenithAngle);
+  const airMass = cosZenith > 0.001
+    ? 1.0 / (cosZenith + 0.15 * Math.pow(93.885 - zenithAngle * 180 / PI, -1.253))
+    : 40.0; // Cap at reasonable maximum
+
+  // Normalize: air mass of 1.0 (overhead sun) = no boost
+  // air mass of 40 (extreme horizon) = maximum boost
+  const pathFactor = Math.min(airMass / 40.0, 1.0);
+
+
+  // 2. SUN ANGLE FACTOR
+  // Multiple scattering is more important when sun is low or below horizon
+  // because the atmosphere acts as a "light pipe"
+  let sunAngleFactor;
+
+  if (altDeg > 30) {
+    // High sun: minimal multiple scattering contribution (direct illumination dominates)
+    sunAngleFactor = 0.1;
+  } else if (altDeg > 0) {
+    // Low sun (0° to 30°): increasing multiple scattering
+    sunAngleFactor = 0.1 + 0.4 * (1.0 - altDeg / 30.0);
+  } else if (altDeg > -6) {
+    // Civil twilight: maximum multiple scattering effect
+    sunAngleFactor = 0.5 + 0.5 * (altDeg + 6) / 6;
+  } else if (altDeg > -12) {
+    // Nautical twilight: still significant
+    sunAngleFactor = 0.3 + 0.2 * (altDeg + 12) / 6;
+  } else {
+    // Deep twilight/night: diminishing returns
+    const fade = Math.max(0, 1.0 + altDeg / 18.0);
+    sunAngleFactor = 0.15 * fade;
+  }
+
+
+  // 3. ALTITUDE FACTOR
+  // Multiple scattering happens more in denser lower atmosphere
+  const altitudeFactor = Math.exp(-sampleHeight / RAYLEIGH_SCALE_HEIGHT);
+
+
+  // 4. COMBINE FACTORS
+  // Base contribution from multiple scattering
+  const baseContribution = 0.5; // Multiple scattering adds ~50% at maximum
+
+  const multipleScatterContribution =
+    baseContribution * pathFactor * sunAngleFactor * altitudeFactor;
+
+  // Return as a multiplicative factor (1.0 = no boost, >1.0 = boost)
+  return 1.0 + multipleScatterContribution;
+}
+
 function skyAlpha(r, g, b) {
     // Normalize to 0..1
     let R = r / 255;
@@ -289,7 +358,13 @@ export default function renderGradient(altitude) {
           const mieTerm = MIE_SCATTER * opticalDensityMie * phaseM;
           scatteredRgb[k] = transmittanceLight[k] * (rayleighTerm + mieTerm);
         }
-        
+
+        // Apply multiple scattering boost
+        const msBoost = getMultipleScatterBoost(altitude, s, sampleHeight);
+        for (let k = 0; k < 3; k++) {
+          scatteredRgb[k] *= msBoost;
+        }
+
         // Accumulate along the ray
         for (let k = 0; k < 3; k++) {
           inscattered[k] +=
