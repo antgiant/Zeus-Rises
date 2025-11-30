@@ -1,7 +1,24 @@
 import { refreshSky } from './horizon/horizon.js'
 
 const slider = document.getElementById('timeSlider');
-const lightPollutionToggle = document.getElementById('lightPollution');
+const lightPollutionToggle = document.getElementById('lightPollution')
+
+lightPollutionStatus = JSON.parse(localStorage.getItem("lightPollution"));
+if (lightPollutionStatus == null) {
+  localStorage.setItem("lightPollution", JSON.stringify(lightPollutionToggle ? lightPollutionToggle.checked : true));
+} else {
+  // Set the checkbox status to match the variable
+  lightPollutionToggle.checked = lightPollutionStatus;
+  
+}
+
+function set_element(element_name, element_value, data = "localStorage") {
+  if (data === "localStorage") {
+    
+  } else {
+    data[element_name] = element_value;
+  }
+}
 
 function setDefaultTime() {
   // 1. Get the current date and time
