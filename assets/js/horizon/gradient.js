@@ -153,72 +153,71 @@ function computeTransmittance(height, angle) {
 }
 
 /**
- * Computes a multiple scattering approximation factor.
- * This accounts for secondary/tertiary scattering that the single-scattering
- * model misses.
+ * Precomputes twilight boost factors for a given sun altitude.
+ * Since we're rendering a gradient from zenith to horizon at fixed ground level,
+ * we can compute per-altitude constants once and reuse them.
  *
  * @param {number} altitude - Sun altitude in radians
+ * @returns {object} Precomputed factors for this sun altitude
+ */
+function computeTwilightFactors(altitude) {
+  const altDeg = (altitude * 180) / Math.PI;
+
+  if (altDeg < 0) {
+    // Twilight regime
+    const earthRadius = 6360e3;
+    const sunAngleRad = Math.abs(altitude);
+
+    // Height at which the sun's ray grazes the Earth (geometric shadow boundary)
+    const shadowHeight = earthRadius * (1.0 / Math.cos(sunAngleRad) - 1.0);
+
+    // Twilight strength: how much to boost shadowed regions
+    const twilightStrength = altDeg > -12
+      ? Math.pow((12 + altDeg) / 12, 0.5)  // 1.0 at 0°, 0.0 at -12°
+      : 0.0;
+
+    return {
+      isTwilight: true,
+      shadowHeight: shadowHeight,
+      twilightStrength: twilightStrength,
+      maxBoost: 3.0
+    };
+  } else {
+    // Daytime regime
+    return {
+      isTwilight: false,
+      daytimeBoost: 0.1  // Small horizon boost during day
+    };
+  }
+}
+
+/**
+ * Computes a multiple scattering approximation factor.
+ * This accounts for secondary/tertiary scattering that the single-scattering
+ * model misses, particularly important during twilight when the upper atmosphere
+ * is still illuminated even though the observer is in Earth's shadow.
+ *
+ * @param {object} factors - Precomputed twilight factors
  * @param {number} viewS - View direction parameter (0 = zenith, 1 = horizon)
  * @param {number} sampleHeight - Height of the sample point in the atmosphere
  * @returns {number} Multiplicative boost factor (typically 1.0 to 3.0)
  */
-function getMultipleScatterBoost(altitude, viewS, sampleHeight) {
-  const altDeg = (altitude * 180) / Math.PI;
+function getMultipleScatterBoost(factors, viewS, sampleHeight) {
+  if (factors.isTwilight) {
+    // If sample is above shadow boundary, it's still in direct sunlight
+    if (sampleHeight > factors.shadowHeight) {
+      return 1.0;
+    }
 
-  // 1. PATH LENGTH FACTOR
-  // Light near the horizon travels through much more atmosphere
-  // This is based on the Chapman function approximation
-  const zenithAngle = Math.acos(1 - viewS); // Angle from zenith
+    // Sample is in Earth's shadow - apply twilight boost
+    // Boost is stronger near the horizon where we see the illuminated upper atmosphere
+    const horizonFactor = viewS * viewS;  // viewS² is cheaper than Math.pow(viewS, 2.0)
 
-  // Simplified Chapman function for optical air mass
-  const cosZenith = Math.cos(zenithAngle);
-  const airMass = cosZenith > 0.001
-    ? 1.0 / (cosZenith + 0.15 * Math.pow(93.885 - zenithAngle * 180 / PI, -1.253))
-    : 40.0; // Cap at reasonable maximum
-
-  // Normalize: air mass of 1.0 (overhead sun) = no boost
-  // air mass of 40 (extreme horizon) = maximum boost
-  const pathFactor = Math.min(airMass / 40.0, 1.0);
-
-
-  // 2. SUN ANGLE FACTOR
-  // Multiple scattering is more important when sun is low or below horizon
-  // because the atmosphere acts as a "light pipe"
-  let sunAngleFactor;
-
-  if (altDeg > 30) {
-    // High sun: minimal multiple scattering contribution (direct illumination dominates)
-    sunAngleFactor = 0.1;
-  } else if (altDeg > 0) {
-    // Low sun (0° to 30°): increasing multiple scattering
-    sunAngleFactor = 0.1 + 0.4 * (1.0 - altDeg / 30.0);
-  } else if (altDeg > -6) {
-    // Civil twilight: maximum multiple scattering effect
-    sunAngleFactor = 0.5 + 0.5 * (altDeg + 6) / 6;
-  } else if (altDeg > -12) {
-    // Nautical twilight: still significant
-    sunAngleFactor = 0.3 + 0.2 * (altDeg + 12) / 6;
-  } else {
-    // Deep twilight/night: diminishing returns
-    const fade = Math.max(0, 1.0 + altDeg / 18.0);
-    sunAngleFactor = 0.15 * fade;
+    return 1.0 + (factors.maxBoost - 1.0) * factors.twilightStrength * horizonFactor;
   }
 
-
-  // 3. ALTITUDE FACTOR
-  // Multiple scattering happens more in denser lower atmosphere
-  const altitudeFactor = Math.exp(-sampleHeight / RAYLEIGH_SCALE_HEIGHT);
-
-
-  // 4. COMBINE FACTORS
-  // Base contribution from multiple scattering
-  const baseContribution = 0.5; // Multiple scattering adds ~50% at maximum
-
-  const multipleScatterContribution =
-    baseContribution * pathFactor * sunAngleFactor * altitudeFactor;
-
-  // Return as a multiplicative factor (1.0 = no boost, >1.0 = boost)
-  return 1.0 + multipleScatterContribution;
+  // Daytime: minimal horizon boost
+  return 1.0 + factors.daytimeBoost * viewS * viewS;
 }
 
 function skyAlpha(r, g, b) {
@@ -266,10 +265,13 @@ function skyAlpha(r, g, b) {
 export default function renderGradient(altitude) {
   const cameraPosition = [0, GROUND_RADIUS, 0];
   const sunDirection = norm([Math.cos(altitude), Math.sin(altitude), 0]);
-  
+
+  // Precompute twilight factors once per render (not per sample!)
+  const twilightFactors = computeTwilightFactors(altitude);
+
   // Projection constant (used to tilt rays upward)
   const focalZ = 1.0 / Math.tan((FOV_DEG * 0.5 * PI) / 180.0);
-  
+
   const stops = [];
   for (let i = 0; i < SAMPLES; i++) {
     const s = i / (SAMPLES - 1);
@@ -360,7 +362,7 @@ export default function renderGradient(altitude) {
         }
 
         // Apply multiple scattering boost
-        const msBoost = getMultipleScatterBoost(altitude, s, sampleHeight);
+        const msBoost = getMultipleScatterBoost(twilightFactors, s, sampleHeight);
         for (let k = 0; k < 3; k++) {
           scatteredRgb[k] *= msBoost;
         }
