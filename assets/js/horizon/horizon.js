@@ -153,6 +153,7 @@ export function refreshSky(dummy) {
     sunPos.altitude,
     sunPos.altitude + multipleScatteringOffset,
     sunPos.altitude + lightPollutionOffset,
+    sunPos.altitude + multipleScatteringOffset+ lightPollutionOffset,
   ];
 
   let alt = Math.max(...candidateAltitudes);
