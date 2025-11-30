@@ -118,7 +118,7 @@ export function refreshSky(dummy) {
   const candidateAltitudes = [
     sunPos.altitude,
     sunPos.altitude + multipleScatteringOffset,
-    lightPollutionOffset,
+    lightPollutionOffset - (3 * Math.PI / 180), // Subtract 3° to match true 0 to expected 0
   ];
 
   let alt = Math.max(...candidateAltitudes);
