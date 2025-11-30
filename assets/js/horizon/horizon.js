@@ -77,7 +77,7 @@ function getLightPollutionOffset(bortle, sunAltitude) {
   };
 
   // Large offsets can invert the twilight curve; cap to keep altitude monotonic
-  const MAX_BORTLE_OFFSET_DEG = 8;
+  const MAX_BORTLE_OFFSET_DEG = 10;
   const rawBaseOffset = baseOffsets[bortle];
   const baseOffset = Math.min(
     rawBaseOffset !== undefined ? rawBaseOffset : 2,
@@ -108,34 +108,6 @@ function getLightPollutionOffset(bortle, sunAltitude) {
   }
 
   return baseOffset * factor * Math.PI / 180;
-}
-
-/**
- * Approximate the multi-scattering equivalent altitude for twilight.
- *
- * The single-scatter renderer looks much darker than a multi-scatter sky.
- * Empirically, sun = -2° single-scatter ≈ -13° multi-scatter. We apply a
- * twilight shift that is strongest near the horizon and fades out by ~-20°.
- */
-function getMultiScatterEquivalentAltitude(altitudeRad) {
-  const altDeg = altitudeRad * 180 / Math.PI;
-  if (altDeg >= 0) return altitudeRad;
-
-  let effectiveDeg;
-  if (altDeg > -8) {
-    // Near horizon: apply full ~11° shift
-    effectiveDeg = altDeg - 11;
-  } else if (altDeg > -20) {
-    // Fade the shift out between -8° and -20°
-    const t = (-altDeg - 8) / 12; // 0 at -8°, 1 at -20°
-    const shift = 11 * (1 - t);
-    effectiveDeg = altDeg - shift;
-  } else {
-    // Deep night: no shift
-    effectiveDeg = altDeg;
-  }
-
-  return effectiveDeg * Math.PI / 180;
 }
 
 function getSliderTimeAsDateObject() {
@@ -171,31 +143,19 @@ export function refreshSky(dummy) {
   );
 
   const multipleScatteringOffset = getMultipleScatteringOffset(sunPos.altitude);
-  const scatteredAltitude = sunPos.altitude + multipleScatteringOffset;
 
   const lightPollution = temp.lightPollution || 4; // Default to Bortle 4 if not available
-  const lpEvalAltitude = getMultiScatterEquivalentAltitude(scatteredAltitude);
-  const lightPollutionOffset = getLightPollutionOffset(lightPollution, lpEvalAltitude);
+  const lightPollutionOffset = getLightPollutionOffset(lightPollution, sunPos.altitude);
 
   // Combine offsets as floors instead of stacking additions to avoid a "reverse sunrise"
   // when the sun crosses the horizon.
   const candidateAltitudes = [
     sunPos.altitude,
-    scatteredAltitude,
-    scatteredAltitude + lightPollutionOffset,
+    sunPos.altitude + multipleScatteringOffset,
+    sunPos.altitude + lightPollutionOffset,
   ];
 
-  // Keep twilight brightening reasonable when the sun is already below the horizon.
-  // Use a smooth cap that relaxes toward the true altitude over ~12° to avoid cliffs.
-  const twilightCap = (1.5 * Math.PI) / 180;
-  const twilightBlendSpan = (12 * Math.PI) / 180;
   let alt = Math.max(...candidateAltitudes);
-  if (sunPos.altitude < 0) {
-    const depth = Math.min(-sunPos.altitude, twilightBlendSpan);
-    const t = depth / twilightBlendSpan;
-    const allowedMax = twilightCap * (1 - t) + sunPos.altitude * t;
-    alt = Math.min(alt, allowedMax);
-  }
 
   console.log("Refreshing Sky (" + now.toLocaleTimeString() +
               " | Sun: " + (sunPos.altitude * 180 / Math.PI).toFixed(1) + "°" +
