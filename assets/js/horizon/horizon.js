@@ -46,6 +46,64 @@ function getMultipleScatteringOffset(actualAltitude) {
   }
 }
 
+/**
+ * Calculate light pollution offset based on Bortle scale and sun altitude.
+ *
+ * Light pollution makes the night sky appear brighter than it physically is,
+ * simulating artificial sky glow by raising the effective sun altitude.
+ *
+ * @param {number} bortle - Bortle scale value (1-9)
+ * @param {number} sunAltitude - True sun altitude in radians
+ * @returns {number} - Light pollution offset in radians
+ */
+function getLightPollutionOffset(bortle, sunAltitude) {
+  const altDeg = sunAltitude * 180 / Math.PI;
+
+  // Only apply light pollution during night (sun well below horizon)
+  if (altDeg > -6) return 0;
+
+  // Base offset by Bortle class (in degrees)
+  // These values are calibrated to match real-world sky brightness
+  const baseOffsets = {
+    1: 0,    // Pristine dark sky: no artificial brightening
+    2: 0.5,  // Typical dark sky: minimal effect
+    3: 1,    // Rural: slight brightening
+    4: 2,    // Rural/suburban: noticeable
+    5: 4,    // Suburban: significant sky glow
+    6: 7,    // Bright suburban: major impact
+    7: 11,   // Urban: severe light dome
+    8: 16,   // City: extreme brightening
+    9: 22    // Inner city: sky never truly dark
+  };
+
+  const baseOffset = baseOffsets[bortle] !== undefined ? baseOffsets[bortle] : 2;
+
+  // Fade the effect based on sun altitude
+  // Maximum effect when sun is around -18° (astronomical twilight)
+  // Gradually reduces as sun goes deeper to avoid unnatural brightness
+  const maxEffectAltitude = -18;
+  const fadeStart = -6;
+  const deepFadeStart = -30;
+
+  let factor;
+  if (altDeg > fadeStart) {
+    // No light pollution effect during twilight
+    factor = 0;
+  } else if (altDeg > maxEffectAltitude) {
+    // Fade in from civil twilight to astronomical twilight
+    factor = (fadeStart - altDeg) / (fadeStart - maxEffectAltitude);
+  } else if (altDeg > deepFadeStart) {
+    // Full effect during night, then gradually reduce for very low sun
+    const deepFactor = (deepFadeStart - altDeg) / (deepFadeStart - maxEffectAltitude);
+    factor = 1.0 - deepFactor * 0.3; // Reduce to 70% for very deep night
+  } else {
+    // Minimal effect when sun is extremely low
+    factor = 0.7;
+  }
+
+  return baseOffset * factor * Math.PI / 180;
+}
+
 function getSliderTimeAsDateObject() {
   const slider = document.getElementById('timeSlider');
   const totalMinutes = parseInt(slider.value, 10);
@@ -77,16 +135,32 @@ export function refreshSky(dummy) {
     parseFloat(temp.latitude),
     parseFloat(temp.longitude),
   );
-  let alt = sunPos.altitude + getMultipleScatteringOffset(sunPos.altitude);
-  console.log("Refreshing Sky ("+now.toLocaleTimeString() + " | " + (sunPos.altitude * 180) / Math.PI+" + " + (getMultipleScatteringOffset(sunPos.altitude) * 180) / Math.PI+" = " + (alt * 180) / Math.PI + ")");
+
+  // Start with physical sun altitude
+  let alt = sunPos.altitude;
+
+  // Add multiple scattering offset (atmospheric effects)
+  const multipleScatteringOffset = getMultipleScatteringOffset(sunPos.altitude);
+  alt += multipleScatteringOffset;
+
+  // Add light pollution offset (artificial sky glow from nearby cities)
+  const lightPollution = temp.lightPollution || 4; // Default to Bortle 4 if not available
+  const lightPollutionOffset = getLightPollutionOffset(lightPollution, sunPos.altitude);
+  alt += lightPollutionOffset;
+
+  console.log("Refreshing Sky (" + now.toLocaleTimeString() +
+              " | Sun: " + (sunPos.altitude * 180 / Math.PI).toFixed(1) + "°" +
+              " + MS: " + (multipleScatteringOffset * 180 / Math.PI).toFixed(1) + "°" +
+              " + LP(B" + lightPollution + "): " + (lightPollutionOffset * 180 / Math.PI).toFixed(1) + "°" +
+              " = " + (alt * 180 / Math.PI).toFixed(1) + "°)");
 
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
   if (prefersDark) {
     alt = Math.PI / -2;
   }
-  
+
   const [gradient, topVec, bottomVec] = renderGradient(alt);
-  
+
   document.body.style.setProperty('--bg-gradient', `${gradient}`);
   document.body.style.setProperty('--bg-color', `rgb(${bottomVec[0]}, ${bottomVec[1]}, ${bottomVec[2]})`);
 }
