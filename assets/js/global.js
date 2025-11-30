@@ -3,7 +3,7 @@ import { refreshSky } from './horizon/horizon.js'
 const slider = document.getElementById('timeSlider');
 const lightPollutionToggle = document.getElementById('lightPollution')
 
-lightPollutionStatus = JSON.parse(localStorage.getItem("lightPollution"));
+let lightPollutionStatus = JSON.parse(localStorage.getItem("lightPollution"));
 if (lightPollutionStatus == null) {
   localStorage.setItem("lightPollution", JSON.stringify(lightPollutionToggle ? lightPollutionToggle.checked : true));
 } else {
