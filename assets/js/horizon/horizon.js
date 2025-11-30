@@ -78,7 +78,7 @@ export function refreshSky(dummy) {
     parseFloat(temp.longitude),
   );
   let alt = sunPos.altitude + getMultipleScatteringOffset(sunPos.altitude);
-  console.log("Refreshing Sky ("+now.toLocaleTimeString() + " - " + (sunPos.altitude * 180) / Math.PI+" + " + (getMultipleScatteringOffset(sunPos.altitude) * 180) / Math.PI+" = " + alt + ")");
+  console.log("Refreshing Sky ("+now.toLocaleTimeString() + " | " + (sunPos.altitude * 180) / Math.PI+" + " + (getMultipleScatteringOffset(sunPos.altitude) * 180) / Math.PI+" = " + (alt * 180) / Math.PI + ")");
 
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
   if (prefersDark) {
