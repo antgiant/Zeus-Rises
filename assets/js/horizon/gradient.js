@@ -191,35 +191,6 @@ function computeTwilightFactors(altitude) {
   }
 }
 
-/**
- * Computes a multiple scattering approximation factor.
- * This accounts for secondary/tertiary scattering that the single-scattering
- * model misses, particularly important during twilight when the upper atmosphere
- * is still illuminated even though the observer is in Earth's shadow.
- *
- * @param {object} factors - Precomputed twilight factors
- * @param {number} viewS - View direction parameter (0 = zenith, 1 = horizon)
- * @param {number} sampleHeight - Height of the sample point in the atmosphere
- * @returns {number} Multiplicative boost factor (typically 1.0 to 3.0)
- */
-function getMultipleScatterBoost(factors, viewS, sampleHeight) {
-  if (factors.isTwilight) {
-    // If sample is above shadow boundary, it's still in direct sunlight
-    if (sampleHeight > factors.shadowHeight) {
-      return 1.0;
-    }
-
-    // Sample is in Earth's shadow - apply twilight boost
-    // Boost is stronger near the horizon where we see the illuminated upper atmosphere
-    const horizonFactor = viewS * viewS;  // viewS² is cheaper than Math.pow(viewS, 2.0)
-
-    return 1.0 + (factors.maxBoost - 1.0) * factors.twilightStrength * horizonFactor;
-  }
-
-  // Daytime: minimal horizon boost
-  return 1.0 + factors.daytimeBoost * viewS * viewS;
-}
-
 function skyAlpha(r, g, b) {
     // Normalize to 0..1
     let R = r / 255;
@@ -361,10 +332,23 @@ export default function renderGradient(altitude) {
           scatteredRgb[k] = transmittanceLight[k] * (rayleighTerm + mieTerm);
         }
 
-        // Apply multiple scattering boost
-        const msBoost = getMultipleScatterBoost(twilightFactors, s, sampleHeight);
-        for (let k = 0; k < 3; k++) {
-          scatteredRgb[k] *= msBoost;
+        // Apply twilight boost for samples in Earth's shadow
+        // During twilight, samples in shadow receive indirect light from the still-illuminated
+        // upper atmosphere. We approximate this by adding a contribution proportional to
+        // the scattering coefficients and viewing geometry.
+        if (twilightFactors.isTwilight && sampleHeight < twilightFactors.shadowHeight) {
+          // Compute an "effective" indirect illumination for this shadowed sample
+          // This represents light scattered from the illuminated upper atmosphere
+          const horizonFactor = s * s;  // stronger when looking toward horizon
+          const effectiveIndirectLight = twilightFactors.twilightStrength * horizonFactor;
+
+          for (let k = 0; k < 3; k++) {
+            const rayleighTerm = RAYLEIGH_SCATTER[k] * opticalDensityRay * phaseR;
+            const mieTerm = MIE_SCATTER * opticalDensityMie * phaseM;
+
+            // Add indirect contribution (scaled down from direct sunlight)
+            scatteredRgb[k] += effectiveIndirectLight * (rayleighTerm + mieTerm) * 0.3;
+          }
         }
 
         // Accumulate along the ray
