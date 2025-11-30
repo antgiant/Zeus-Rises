@@ -1,6 +1,7 @@
 import { refreshSky } from './horizon/horizon.js'
 
 const slider = document.getElementById('timeSlider');
+const lightPollutionToggle = document.getElementById('lightPollution');
 
 function setDefaultTime() {
   // 1. Get the current date and time
@@ -19,6 +20,9 @@ function setDefaultTime() {
 
 // Attach the event listener for user input
 slider.addEventListener('input', refreshSky);
+if (lightPollutionToggle) {
+  lightPollutionToggle.addEventListener('change', refreshSky);
+}
 
 // Run the function to set the default time when the page loads
 setDefaultTime();

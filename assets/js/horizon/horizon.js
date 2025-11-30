@@ -80,6 +80,11 @@ function getLightPollutionOffset(bortle, sunAltitude) {
   return capped * Math.PI / 180;
 }
 
+function lightPollutionEnabled() {
+  const checkbox = document.getElementById('lightPollution');
+  return checkbox ? checkbox.checked : true;
+}
+
 function getSliderTimeAsDateObject() {
   const slider = document.getElementById('timeSlider');
   const totalMinutes = parseInt(slider.value, 10);
@@ -105,6 +110,7 @@ function getSliderTimeAsDateObject() {
 export function refreshSky(dummy) {
   //Estimate location based on timezone
   const temp = Virgo.getLocation();
+  const includeLightPollution = lightPollutionEnabled();
   const now = getSliderTimeAsDateObject();
   const sunPos = getPosition(
     now,
@@ -115,15 +121,20 @@ export function refreshSky(dummy) {
   const multipleScatteringOffset = getMultipleScatteringOffset(sunPos.altitude);
 
   const lightPollution = temp.lightPollution || 4; // Default to Bortle 4 if not available
-  const lightPollutionOffset = getLightPollutionOffset(lightPollution, sunPos.altitude);
+  const lightPollutionOffset = includeLightPollution
+    ? getLightPollutionOffset(lightPollution, sunPos.altitude)
+    : 0;
 
   // Combine offsets as floors instead of stacking additions to avoid a "reverse sunrise"
   // when the sun crosses the horizon.
   const candidateAltitudes = [
     sunPos.altitude,
     sunPos.altitude + multipleScatteringOffset,
-    lightPollutionOffset - (3 * Math.PI / 180), // Subtract 3° to match true 0 to expected 0
   ];
+
+  if (includeLightPollution) {
+    candidateAltitudes.push(lightPollutionOffset - (3 * Math.PI / 180)); // Subtract 3° to match true 0 to expected 0
+  }
 
   let alt = Math.max(...candidateAltitudes);
 
@@ -135,7 +146,11 @@ export function refreshSky(dummy) {
  */
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
   if (prefersDark) {
-    alt = lightPollutionOffset - (3 * Math.PI / 180);
+    if (includeLightPollution) {
+      alt = lightPollutionOffset - (3 * Math.PI / 180);
+    } else {
+      alt = Math.PI / -2;
+    }
   }
 
   const [gradient, topVec, bottomVec] = renderGradient(alt);
