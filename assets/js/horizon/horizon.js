@@ -73,7 +73,7 @@ function getLightPollutionOffset(bortle, sunAltitude) {
     9: 22    // Inner city: sky never truly dark
   };
 
-  return baseOffsets[bortle] * factor * Math.PI / 180;
+  return baseOffsets[bortle] * Math.PI / 180;
 }
 
 function getSliderTimeAsDateObject() {
