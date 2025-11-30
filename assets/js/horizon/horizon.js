@@ -59,9 +59,6 @@ function getMultipleScatteringOffset(actualAltitude) {
 function getLightPollutionOffset(bortle, sunAltitude) {
   const altDeg = sunAltitude * 180 / Math.PI;
 
-  // Only apply light pollution during night (sun well below horizon)
-  if (altDeg > -6) return 0;
-
   // Base offset by Bortle class (in degrees)
   // These values are calibrated to match real-world sky brightness
   const baseOffsets = {
@@ -76,33 +73,7 @@ function getLightPollutionOffset(bortle, sunAltitude) {
     9: 22    // Inner city: sky never truly dark
   };
 
-
-  const baseOffset = baseOffsets[bortle];;
-
-  // Fade the effect based on sun altitude
-  // Maximum effect when sun is around -18° (astronomical twilight)
-  // Gradually reduces as sun goes deeper to avoid unnatural brightness
-  const maxEffectAltitude = -18;
-  const fadeStart = -6;
-  const deepFadeStart = -30;
-
-  let factor;
-  if (altDeg > fadeStart) {
-    // No light pollution effect during twilight
-    factor = 0;
-  } else if (altDeg > maxEffectAltitude) {
-    // Fade in from civil twilight to astronomical twilight
-    factor = (fadeStart - altDeg) / (fadeStart - maxEffectAltitude);
-  } else if (altDeg > deepFadeStart) {
-    // Full effect during night, then gradually reduce for very low sun
-    const deepFactor = (deepFadeStart - altDeg) / (deepFadeStart - maxEffectAltitude);
-    factor = 1.0 - deepFactor * 0.3; // Reduce to 70% for very deep night
-  } else {
-    // Minimal effect when sun is extremely low
-    factor = 0.7;
-  }
-
-  return baseOffset * factor * Math.PI / 180;
+  return baseOffsets[bortle] * factor * Math.PI / 180;
 }
 
 function getSliderTimeAsDateObject() {
@@ -141,7 +112,7 @@ export function refreshSky(dummy) {
 
   const lightPollution = temp.lightPollution || 4; // Default to Bortle 4 if not available
   const lightPollutionOffset = getLightPollutionOffset(lightPollution, sunPos.altitude);
-  
+
   // Combine offsets as floors instead of stacking additions to avoid a "reverse sunrise"
   // when the sun crosses the horizon.
   const candidateAltitudes = [
