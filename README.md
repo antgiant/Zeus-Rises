@@ -1,2 +1,2 @@
-# Zeus-Rising
+# Zeus-Rises
 A novel in progress
