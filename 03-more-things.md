@@ -1,7 +1,5 @@
 ---
-layout: chapter
-title: Configuration
-prev: /chapters/02-things
+prev: 02-things
 next: null
 ---
 
