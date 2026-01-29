@@ -27,14 +27,12 @@ footer {
 }
 
 #main-content {
-  .text-container {
-    background: rgba(255, 255, 255, 0.1);
-    /* Very faint white */
-    backdrop-filter: blur(10px);
-    /* Blurs the sky behind the text */
-    border-radius: 8px;
-    padding: 20px;
-  }
+  background: rgba(255, 255, 255, 0.1);
+  /* Very faint white */
+  backdrop-filter: blur(10px);
+  /* Blurs the sky behind the text */
+  border-radius: 8px;
+  padding: 20px;
 }
 
 .time-container {
