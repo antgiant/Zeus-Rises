@@ -31,17 +31,17 @@
     <div class="inner clearfix">
       <section id="main-content">
         {{ content }}
+        <nav>
+          {% if page.prev %}
+          <a href="{{ page.prev }}">⬅ Previous</a>
+          {% endif %}
+          <a href="{{ "/" | relative_url }}">📖 Table of Contents</a>
+          {% if page.next %}
+          <a href="{{ page.next }}">Next ➡️</a>
+          {% endif %}
+        </nav>
       </section>
     </div>
-    <nav>
-      {% if page.prev %}
-      <a href="{{ page.prev }}">⬅ Previous</a>
-      {% endif %}
-      <a href="{{ "/" | relative_url }}">📖 Table of Contents</a>
-      {% if page.next %}
-      <a href="{{ page.next }}">Next ➡️</a>
-      {% endif %}
-    </nav>
   </div>
   <footer>
     <div class="time-container inner">
