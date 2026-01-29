@@ -1,7 +1,4 @@
----
----
-
-@import "{{ site.theme }}";
+--- --- @import "{{ site.theme }}";
 
 body {
   --bg-gradient: none;
@@ -19,13 +16,25 @@ body {
   height: 100%
 }
 
-#main-content *, footer {
+#main-content *,
+footer {
   color: #b8b8b8;
   mix-blend-mode: difference;
 }
 
 #main-content h1 {
   color: #b8b8b8 !important;
+}
+
+#main-content {
+  .text-container {
+    background: rgba(255, 255, 255, 0.1);
+    /* Very faint white */
+    backdrop-filter: blur(10px);
+    /* Blurs the sky behind the text */
+    border-radius: 8px;
+    padding: 20px;
+  }
 }
 
 .time-container {
