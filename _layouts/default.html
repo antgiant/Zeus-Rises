@@ -33,16 +33,16 @@
         {{ content }}
       </section>
     </div>
+    <nav>
+      {% if page.prev %}
+      <a href="{{ page.prev }}">⬅ Previous</a>
+      {% endif %}
+      <a href="{{ "/" | relative_url }}">📖 Table of Contents</a>
+      {% if page.next %}
+      <a href="{{ page.next }}">Next ➡️</a>
+      {% endif %}
+    </nav>
   </div>
-  <nav>
-    {% if page.prev %}
-    <a href="{{ page.prev }}">⬅ Previous</a>
-    {% endif %}
-    <a href="{{ "/" | relative_url }}">📖 Table of Contents</a>
-    {% if page.next %}
-    <a href="{{ page.next }}">Next ➡️</a>
-    {% endif %}
-  </nav>
   <footer>
     <div class="time-container inner">
       <input type="range" class="full-width-slider" id="timeSlider" min="0" max="1439" value="0">
