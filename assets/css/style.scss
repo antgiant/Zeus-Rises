@@ -46,6 +46,39 @@ footer {
   width: 100%;
 }
 
+/* Custom toggle switch for Light Pollution checkbox */
+#lightPollution {
+  appearance: none;
+  width: 40px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+  vertical-align: middle;
+  mix-blend-mode: normal;
+}
+
+#lightPollution::before {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s;
+}
+
+#lightPollution:checked {
+  background: #4a90d9;
+}
+
+#lightPollution:checked::before {
+  transform: translateX(20px);
+}
+
 @media (prefers-color-scheme: dark) {
   #timeSlider {
     display: none;
