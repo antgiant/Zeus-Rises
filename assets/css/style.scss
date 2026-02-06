@@ -2,6 +2,31 @@
 ---
 @import "{{ site.theme }}";
 
+/* Remove slashes before headings */
+h1::before,
+h2::before,
+h3::before,
+h4::before,
+h5::before,
+h6::before {
+  content: none !important;
+}
+
+/* Make links more obviously links */
+a {
+  text-decoration: underline;
+}
+
+a:hover {
+  text-decoration: underline;
+  opacity: 0.8;
+}
+
+/* Make header image 75% opaque */
+header {
+  opacity: 0.75;
+}
+
 body {
   --bg-gradient: none;
   --bg-color: white;
