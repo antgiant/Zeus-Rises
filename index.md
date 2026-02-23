@@ -1,7 +1,7 @@
-# Zeus Rising
+# Zeus Rises
 ## A Novel in progress
 
-![Cover Image of Zeus Rising Title and two planets in space](cover.jpeg)
+![Cover Image of Zeus Rises and two planets in space](cover.png)
 
 
 ## Table of Contents
