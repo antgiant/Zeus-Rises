@@ -6,4 +6,4 @@
 
 ## Table of Contents
 
-1. [2026-08-31 – A Beautiful Day](2026-08-31-a-beautiful-day)
+- [2026-08-31 – A Beautiful Day](2026-08-31-a-beautiful-day)
