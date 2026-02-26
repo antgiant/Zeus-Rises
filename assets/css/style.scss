@@ -49,7 +49,8 @@ footer {
   mix-blend-mode: difference;
 }
 
-#main-content p:has(img) {
+#main-content p:has(img),
+#main-content img {
     mix-blend-mode: normal;
 }
 
