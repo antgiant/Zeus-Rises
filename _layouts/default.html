@@ -33,22 +33,13 @@
         {{ content }}
         <h2>Table of Contents</h2>
         <ul>
-          {% for post in site.posts.items %}
+          {% for post in site.posts %}
           <li>
             <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
           </li>
           {% endfor %}
         </ul>
         
-        <nav>
-          {% if page.previous.url %}
-          <a href="{{ page.previous.url }}">⬅ Previous</a>
-          {% endif %}
-          <a href="{{ "/" | relative_url }}">📖 Table of Contents</a>
-          {% if page.next.url %}
-          <a href="{{ page.next.url }}">Next ➡️</a>
-          {% endif %}
-        </nav>
       </section>
     </div>
   </div>
