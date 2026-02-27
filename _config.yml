@@ -1,3 +1,7 @@
 theme: jekyll-theme-architect
+title: Zeus Rises
+url: "https://zeusrises.wooleys.us"
+description: "A novel in progress"
+permalink: /:title
 plugins:
   - jekyll-feed

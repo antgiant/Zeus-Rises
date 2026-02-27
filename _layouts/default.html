@@ -32,12 +32,12 @@
       <section id="main-content">
         {{ content }}
         <nav>
-          {% if page.prev %}
-          <a href="{{ page.prev }}">⬅ Previous</a>
+          {% if page.previous.url %}
+          <a href="{{ page.previous.url }}">⬅ Previous</a>
           {% endif %}
           <a href="{{ "/" | relative_url }}">📖 Table of Contents</a>
-          {% if page.next %}
-          <a href="{{ page.next }}">Next ➡️</a>
+          {% if page.next.url %}
+          <a href="{{ page.next.url }}">Next ➡️</a>
           {% endif %}
         </nav>
       </section>
