@@ -31,15 +31,6 @@
     <div class="inner clearfix">
       <section id="main-content">
         {{ content }}
-        <h2>Table of Contents</h2>
-        <ul>
-          {% for post in site.posts.items %}
-          <li>
-            <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
-          </li>
-          {% endfor %}
-        </ul>
-        
         <nav>
           {% if page.previous.url %}
           <a href="{{ page.previous.url }}">⬅ Previous</a>
