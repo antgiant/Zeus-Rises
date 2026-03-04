@@ -1,6 +1,4 @@
----
----
-@import "{{ site.theme }}";
+--- --- @import "{{ site.theme }}";
 
 /* Remove slashes before headings */
 h1::before,
@@ -51,7 +49,7 @@ footer {
 
 #main-content p:has(img),
 #main-content img {
-    mix-blend-mode: normal;
+  mix-blend-mode: normal;
 }
 
 #main-content h1 {
@@ -115,4 +113,16 @@ footer {
   #timeSlider {
     display: none;
   }
+}
+
+.embeddable-buttondown-form {
+  display: flex;
+  flex-direction: column;
+  /* Stack elements vertically */
+  align-items: center;
+  /* Center elements horizontally */
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  /* Ensure it takes up the container width */
 }

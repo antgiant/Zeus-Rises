@@ -5,3 +5,5 @@ description: "A novel in progress"
 permalink: /:title
 plugins:
   - jekyll-feed
+feed:
+  excerpt_only: false
