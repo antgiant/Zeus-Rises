@@ -1,4 +1,6 @@
---- --- @import "{{ site.theme }}";
+---
+---
+@import "{{ site.theme }}";
 
 /* Remove slashes before headings */
 h1::before,
