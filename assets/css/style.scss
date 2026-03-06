@@ -133,3 +133,8 @@ form {
   background-color: transparent !important;
   border: none !important;
 }
+.embeddable-buttondown-form input[type="email"] {
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(255, 255, 255, 0.3);
+}
