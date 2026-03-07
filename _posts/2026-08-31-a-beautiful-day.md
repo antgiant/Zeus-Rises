@@ -1,8 +1,6 @@
 ---
-layout: post
 title: "2026-08-31 – A Beautiful Day"
 date: 2026-02-21 10:00:00 -0500
-categories: post
 layout: post
 ---
 
